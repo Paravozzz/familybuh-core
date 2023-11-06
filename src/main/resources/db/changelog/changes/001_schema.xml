@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="now" value="sysdate" dbms="oracle"/>
+    <property name="now" value="now()" dbms="mysql"/>
+    <property name="now" value="now()" dbms="postgresql"/>
+
+    <changeSet id="001" author="admin" labels="schema">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="currency"/>
+            </not>
+            <not>
+                <tableExists tableName="user_info"/>
+            </not>
+            <not>
+                <tableExists tableName="user_info_currency"/>
+            </not>
+            <not>
+                <tableExists tableName="account"/>
+            </not>
+            <not>
+                <tableExists tableName="category"/>
+            </not>
+            <not>
+                <tableExists tableName="operation"/>
+            </not>
+        </preConditions>
+        <createTable tableName="currency">
+            <column name="id" type="varchar(3)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="code" type="varchar(3)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="user_info">
+            <column name="id" type="varchar(36)" autoIncrement="false">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="user_info_currency">
+            <column name="user_info_id" type="varchar(36)" autoIncrement="false">
+                <constraints nullable="false" foreignKeyName="fk_user_info" referencedTableName="user_info"
+                             referencedColumnNames="id"/>
+            </column>
+            <column name="currency_id" type="varchar(3)" autoIncrement="false">
+                <constraints nullable="false" foreignKeyName="fk_currency" referencedTableName="currency"
+                             referencedColumnNames="id"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="user_info_currency" columnNames="user_info_id, currency_id" constraintName="pk_user_info_currency"/>
+
+        <createTable tableName="account">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="is_active" type="bool" defaultOnNull="true" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency_id" type="varchar(3)">
+                <constraints nullable="false" foreignKeyName="fk_account_currency" referencedTableName="currency"
+                             referencedColumnNames="id"/>
+            </column>
+            <column name="user_info_id" type="varchar(36)">
+                <constraints nullable="false" foreignKeyName="fk_account_user_info" referencedTableName="user_info"
+                             referencedColumnNames="id"/>
+            </column>
+        </createTable>
+        
+        <createTable tableName="category">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_income" type="bool" defaultOnNull="true" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="operation">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="debit" type="numeric(38, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="credit" type="numeric(38, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="debit_account_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_operation_debit_account" referencedTableName="account"
+                             referencedColumnNames="id" deleteCascade="false"/>
+            </column>
+            <column name="credit_account_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_operation_credit_account" referencedTableName="account"
+                             referencedColumnNames="id" deleteCascade="false"/>
+            </column>
+            <column name="category_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_operation_category" referencedTableName="category"
+                             referencedColumnNames="id" deleteCascade="false"/>
+            </column>
+            <column name="time" type="timestamp(6)" defaultOnNull="true" defaultValueComputed="${now}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
