@@ -10,7 +10,6 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Component;
 import ru.homebuh.core.domain.UserInfoEntity;
 import ru.homebuh.core.repository.UserInfoRepository;
-import ru.homebuh.core.service.UserInitService;
 
 import java.util.Optional;
 
@@ -20,9 +19,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserInitAspect {
 
-    private final UserInitService userInitService;
-    private final UserInfoRepository userInfoRepository;
-
     @Pointcut("@annotation(UserInitAnnotation) && args(token,..)")
     public void callAtUserInitAnnotation(JwtAuthenticationToken token) {
     }
@@ -30,11 +26,6 @@ public class UserInitAspect {
     @Before(value = "callAtUserInitAnnotation(token)", argNames = "jp,token")
     public void beforeCallMethodWithAnnotation(JoinPoint jp, JwtAuthenticationToken token) {
         final String sub = token.getTokenAttributes().get("sub").toString();
-        Optional<UserInfoEntity> userInfoOpt = userInfoRepository.findByIdIgnoreCase(sub);
-        if (userInfoOpt.isPresent())
-            return;
-
-        userInitService.init(sub);
-
+        log.info(sub);
     }
 }

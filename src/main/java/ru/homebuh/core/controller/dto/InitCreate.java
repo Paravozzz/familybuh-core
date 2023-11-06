@@ -10,9 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class CurrencyCreate {
-
-    @JsonProperty("id")
-    private String id;
-
+public class InitCreate {
+    @JsonProperty("currencyId")
+    private String currencyId;
 }

@@ -7,7 +7,7 @@ import ru.homebuh.core.domain.UserInfoEntity;
 import java.util.Optional;
 
 @Repository
-public interface UserInfoRepository extends JpaRepository<UserInfoEntity, Long> {
+public interface UserInfoRepository extends JpaRepository<UserInfoEntity, String> {
     Optional<UserInfoEntity> findByIdIgnoreCase(String id);
 
 }

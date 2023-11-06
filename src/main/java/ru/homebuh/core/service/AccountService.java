@@ -4,11 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.homebuh.core.controller.dto.AccountCreate;
+import ru.homebuh.core.controller.dto.MasterAccountCreate;
 import ru.homebuh.core.domain.AccountEntity;
 import ru.homebuh.core.mapper.AccountMapper;
 import ru.homebuh.core.repository.AccountRepository;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -19,16 +20,46 @@ public class AccountService {
     private final AccountMapper accountMapper;
 
     @Transactional
-    public AccountEntity create(AccountCreate accountCreate) {
+    public AccountEntity createAccount(AccountCreate accountCreate) {
         return accountRepository.save(accountMapper.map(accountCreate));
     }
-    @Transactional
-    public Collection<AccountEntity> findAllByUserId(String id) {
 
-        return accountRepository.findAllByUserId(id);
+    @Transactional
+    public AccountEntity createMasterAccount(MasterAccountCreate masterAccountCreate) {
+        return accountRepository.save(accountMapper.map(masterAccountCreate));
     }
 
-    public Optional<AccountEntity> findById(Long accountId) {
-        return accountRepository.findById(accountId);
+    /**
+     * Найти все обычные счета пользователя
+     *
+     * @param id идентификатор пользователя
+     * @return список обычных счетов
+     */
+    @Transactional
+    public List<AccountEntity> findAllByUserIdIgnoreCase(String id) {
+        return accountRepository.findAllByUserIdIgnoreCase(id);
+    }
+
+    /**
+     * Найти все мастер-счета пользователя
+     *
+     * @param id идентификатор пользователя
+     * @return список мастер-счетов
+     */
+    @Transactional
+    public List<AccountEntity> findAllMasterByUserIdIgnoreCase(String id) {
+        return accountRepository.findAllMasterByUserIdIgnoreCase(id);
+    }
+
+    /**
+     * Найти мастер-счет пользователя
+     *
+     * @param userId     идентификатор пользователя
+     * @param currencyId цифровой код валюты
+     * @return мастер-счет
+     */
+    @Transactional
+    public Optional<AccountEntity> findMasterByUserIdIgnoreCaseAndCurrencyId(String userId, String currencyId) {
+        return accountRepository.findMasterByUserIdIgnoreCaseAndCurrencyId(userId, currencyId);
     }
 }

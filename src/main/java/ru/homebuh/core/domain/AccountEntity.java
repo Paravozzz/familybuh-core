@@ -28,25 +28,20 @@ public class AccountEntity {
     @JsonProperty("name")
     private String name;
 
-    @Column(name="is_active", columnDefinition = "boolean", nullable = false)
-    @Order(3)
-    @JsonProperty("isActive")
-    private boolean isActive = false;
-
     @ManyToOne
     @JoinColumn(name="currency_id", nullable = false)
-    @Order(4)
+    @Order(3)
     @JsonProperty("currency")
     private CurrencyEntity currency;
 
     @Column(name="description", columnDefinition = "varchar(255)")
-    @Order(5)
+    @Order(4)
     @JsonProperty("description")
     private String description = "";
 
     @ManyToOne
     @JoinColumn(name="user_info_id", nullable = false)
-    @Order(6)
+    @Order(5)
     @JsonIgnore
     private UserInfoEntity userInfo;
 }
