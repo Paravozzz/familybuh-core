@@ -45,27 +45,23 @@ public class InitService {
         Optional<UserInfoEntity> optionalUserInfo = userInfoRepository.findByIdIgnoreCase(userId);
         userInfoEntity = optionalUserInfo.orElseGet(() -> userInfoService.create(new UserInfoCreate(userId)));
 
-        final String initCurrencyId = initCreate.getCurrencyId();
-        CurrencyEntity initCurrency = currencyRepository.findById(initCurrencyId)
+        final String initCurrencyCode = initCreate.getCurrencyCode();
+        CurrencyEntity initCurrency = currencyRepository.findByCodeIgnoreCase(initCurrencyCode)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constatnts.NOT_FOUND_BY_ID_TEMPLATE, "Currency", "id", initCurrencyId)));
+                        MessageFormat.format(Constatnts.NOT_FOUND_BY_ID_TEMPLATE, "Currency", "code", initCurrencyCode)));
 
         Set<CurrencyEntity> userCurrencies = userInfoEntity.getCurrencies();
-        if (userCurrencies.isEmpty()) {
+        if (userCurrencies.isEmpty() || !userCurrencies.contains(initCurrency)) {
             userCurrencies.add(initCurrency);
-            createMaserByCurrency(userId, initCurrency);
-        } else {
-            List<AccountEntity> allMasterAccounts = accountService.findAllMasterByUserIdIgnoreCase(userId);
-            Set<CurrencyEntity> currenciesWithoutMasterAccount = findCurrenciesWithoutMasterAccount(userCurrencies, allMasterAccounts);
-            for (CurrencyEntity currency : currenciesWithoutMasterAccount) {
-                createMaserByCurrency(userId, currency);
-            }
+            userInfoRepository.save(userInfoEntity);
         }
-
+        List<AccountEntity> allMasterAccounts = accountService.findAllMasterByUserIdIgnoreCase(userId);
+        Set<CurrencyEntity> currenciesWithoutMasterAccount = findCurrenciesWithoutMasterAccount(userCurrencies, allMasterAccounts);
+        currenciesWithoutMasterAccount.forEach(currency -> createMaserAccountByCurrency(userId, currency));
     }
 
-    private void createMaserByCurrency(String userId, CurrencyEntity initCurrency) {
+    private void createMaserAccountByCurrency(String userId, CurrencyEntity initCurrency) {
         final Optional<AccountEntity> optionalMasterAccount = accountService.findMasterByUserIdIgnoreCaseAndCurrencyId(userId, initCurrency.getId());
         if (optionalMasterAccount.isEmpty()) {
             accountService.createMasterAccount(new MasterAccountCreate(initCurrency.getCode(), userId));
@@ -89,7 +85,7 @@ public class InitService {
         if (allMasterAccounts.isEmpty())
             return false;
 
-        //3. У каждой валюты, которая есть у пользователя, должен быть создан мастер-счёт
+        //4. У каждой валюты, которая есть у пользователя, должен быть создан мастер-счёт
         return findCurrenciesWithoutMasterAccount(userCurrencies, allMasterAccounts).isEmpty();
     }
 
@@ -104,7 +100,7 @@ public class InitService {
         if (checkInit(userId)) {
             return new ResponseEntity<>(true, HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(false, HttpStatus.UNPROCESSABLE_ENTITY);
+            return new ResponseEntity<>(false, HttpStatus.OK);
         }
     }
 

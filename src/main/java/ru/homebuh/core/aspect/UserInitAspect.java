@@ -8,10 +8,6 @@ import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
-import ru.homebuh.core.domain.UserInfoEntity;
-import ru.homebuh.core.repository.UserInfoRepository;
-
-import java.util.Optional;
 
 @Aspect
 @Component
@@ -26,6 +22,6 @@ public class UserInitAspect {
     @Before(value = "callAtUserInitAnnotation(token)", argNames = "jp,token")
     public void beforeCallMethodWithAnnotation(JoinPoint jp, JwtAuthenticationToken token) {
         final String sub = token.getTokenAttributes().get("sub").toString();
-        log.info(sub);
+        log.info("JWT subject: " + sub);
     }
 }

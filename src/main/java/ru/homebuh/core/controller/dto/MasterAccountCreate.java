@@ -12,9 +12,15 @@ import lombok.Setter;
 @Setter
 public class MasterAccountCreate {
 
+    /**
+     * Буквенный код валюты
+     */
     @JsonProperty("currencyCode")
     private String currencyCode;
 
+    /**
+     * Идентификатор пользователя
+     */
     @JsonProperty("userInfoId")
     private String userInfoId;
 

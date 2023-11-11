@@ -33,7 +33,7 @@ public abstract class AccountMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "description", ignore = true)
     @Mapping(target = "name", expression = "java(source.getUserInfoId().toLowerCase())")
-    @Mapping(target = "userInfo", expression = "java(fetchUserInfo(source.getUserInfoId().toLowerCase()))")
+    @Mapping(target = "userInfo", expression = "java(fetchUserInfo(source.getUserInfoId()))")
     @Mapping(target = "currency", expression = "java(fetchCurrency(source.getCurrencyCode()))")
     public abstract AccountEntity map(MasterAccountCreate source);
 
@@ -45,7 +45,11 @@ public abstract class AccountMapper {
                 ));
     }
 
-    protected CurrencyEntity fetchCurrency(String id) {
-        return currencyRepository.getReferenceById(id.toUpperCase());
+    protected CurrencyEntity fetchCurrency(String code) {
+        return currencyRepository.
+                findByCodeIgnoreCase(code)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        MessageFormat.format(Constatnts.NOT_FOUND_BY_ID_TEMPLATE, "Currency", "code", code)
+                ));
     }
 }

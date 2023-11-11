@@ -11,6 +11,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class InitCreate {
-    @JsonProperty("currencyId")
-    private String currencyId;
+    @JsonProperty("currencyCode")
+    private String currencyCode;
 }
