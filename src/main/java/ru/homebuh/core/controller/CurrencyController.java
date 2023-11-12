@@ -1,9 +1,9 @@
 package ru.homebuh.core.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.web.bind.annotation.*;
 import ru.homebuh.core.domain.CurrencyEntity;
 import ru.homebuh.core.service.CurrencyService;
 
@@ -19,5 +19,21 @@ public class CurrencyController {
     @GetMapping("currencies")
     Collection<CurrencyEntity> getAll() {
         return currencyService.findAll();
+    }
+
+    @GetMapping("user/currencies")
+    Collection<CurrencyEntity> getAll(final JwtAuthenticationToken token) {
+        return currencyService.findAllByUserId(token.getName());
+    }
+
+    @PostMapping("user/currency/{currencyCode}")
+    @ResponseStatus(HttpStatus.CREATED)
+    CurrencyEntity attachCurrencyToUser(final JwtAuthenticationToken token, @PathVariable String currencyCode) {
+        return currencyService.attachCurrencyToUser(token.getName(), currencyCode);
+    }
+
+    @DeleteMapping("user/currency/{currencyCode}")
+    CurrencyEntity detachCurrencyToUser(final JwtAuthenticationToken token, @PathVariable String currencyCode) {
+        return currencyService.detachCurrencyToUser(token.getName(), currencyCode);
     }
 }
