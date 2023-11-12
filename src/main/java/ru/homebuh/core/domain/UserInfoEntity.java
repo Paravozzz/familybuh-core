@@ -33,4 +33,13 @@ public class UserInfoEntity {
     )
     @JsonIgnore
     private Set<CurrencyEntity> currencies = new HashSet<>();
+
+    @ManyToMany(cascade = {CascadeType.ALL})
+    @JoinTable(
+            name = "user_info_category",
+            joinColumns = {@JoinColumn(name = "user_info_id")},
+            inverseJoinColumns = {@JoinColumn(name = "category_id")}
+    )
+    @JsonIgnore
+    private Set<CategoryEntity> categories = new HashSet<>();
 }

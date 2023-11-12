@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="003" author="admin" labels="schema">
+        <createTable tableName="user_info_category">
+            <column name="user_info_id" type="varchar(36)" autoIncrement="false">
+                <constraints nullable="false" foreignKeyName="fk_user_info" referencedTableName="user_info"
+                             referencedColumnNames="id"/>
+            </column>
+            <column name="category_id" type="bigint" autoIncrement="false">
+                <constraints nullable="false" foreignKeyName="fk_category" referencedTableName="category"
+                             referencedColumnNames="id"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="user_info_category" columnNames="user_info_id, category_id" constraintName="pk_user_info_category"/>
+
+    </changeSet>
+</databaseChangeLog>
