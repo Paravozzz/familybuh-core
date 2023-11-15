@@ -9,5 +9,6 @@ import ru.homebuh.core.domain.UserInfoEntity;
 public interface UserInfoMapper {
 
     @Mapping(target = "currencies", ignore = true)
+    @Mapping(target = "categories", ignore = true)
     UserInfoEntity map(UserInfoCreate source);
 }
