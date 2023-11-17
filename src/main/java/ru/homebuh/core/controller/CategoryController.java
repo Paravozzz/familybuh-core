@@ -34,7 +34,7 @@ public class CategoryController {
     CategoryEntity create(
             final JwtAuthenticationToken token,
             @RequestBody CategoryCreate categoryCreate) {
-        return categoryService.create(categoryCreate);
+        return categoryService.create(token.getName(), categoryCreate);
     }
 
     @PutMapping("user/category/{categoryId}")

@@ -49,7 +49,7 @@ public class InitService {
         CurrencyEntity initCurrency = currencyRepository.findByCodeIgnoreCase(initCurrencyCode)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constatnts.NOT_FOUND_BY_ID_TEMPLATE, "Currency", "code", initCurrencyCode)));
+                        MessageFormat.format(Constatnts.NOT_FOUND_BY_PARAM_TEMPLATE, "Currency", "code", initCurrencyCode)));
 
         Set<CurrencyEntity> userCurrencies = userInfoEntity.getCurrencies();
         if (userCurrencies.isEmpty() || !userCurrencies.contains(initCurrency)) {

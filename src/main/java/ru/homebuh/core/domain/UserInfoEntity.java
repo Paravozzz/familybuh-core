@@ -8,7 +8,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.core.annotation.Order;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -41,5 +43,5 @@ public class UserInfoEntity {
             inverseJoinColumns = {@JoinColumn(name = "category_id")}
     )
     @JsonIgnore
-    private Set<CategoryEntity> categories = new HashSet<>();
+    private List<CategoryEntity> categories = new ArrayList<>(0);
 }

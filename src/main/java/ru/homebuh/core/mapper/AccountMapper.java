@@ -41,7 +41,7 @@ public abstract class AccountMapper {
         return userInfoRepository
                 .findByIdIgnoreCase(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constatnts.NOT_FOUND_BY_ID_TEMPLATE, "UserInfo", "id", id)
+                        MessageFormat.format(Constatnts.NOT_FOUND_BY_PARAM_TEMPLATE, "UserInfo", "id", id)
                 ));
     }
 
@@ -49,7 +49,7 @@ public abstract class AccountMapper {
         return currencyRepository.
                 findByCodeIgnoreCase(code)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constatnts.NOT_FOUND_BY_ID_TEMPLATE, "Currency", "code", code)
+                        MessageFormat.format(Constatnts.NOT_FOUND_BY_PARAM_TEMPLATE, "Currency", "code", code)
                 ));
     }
 }
