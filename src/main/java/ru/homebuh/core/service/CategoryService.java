@@ -59,7 +59,18 @@ public class CategoryService {
     }
 
     @Transactional
-    public CategoryEntity update(Long categoryId, CategoryUpdate categoryUpdate) {
+    public CategoryEntity update(String userInfoId, Long categoryId, CategoryUpdate categoryUpdate) {
+        UserInfoEntity userInfo = userInfoRepository.findByIdIgnoreCase(userInfoId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        MessageFormat.format(Constatnts.NOT_FOUND_BY_PARAM_TEMPLATE, "User", "id", userInfoId)));
+
+        List<CategoryEntity> categories = userInfo.getCategories();
+        if (categories.stream().noneMatch(c -> Objects.equals(c.getId(), categoryId))) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    MessageFormat.format(Constatnts.DUPLICATE_BY_PARAM_TEMPLATE, "Category", "id", categoryId));
+        }
         return categoryRepository.save(categoryMapper.map(categoryId, categoryUpdate));
     }
 }

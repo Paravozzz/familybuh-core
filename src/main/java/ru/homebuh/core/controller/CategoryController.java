@@ -26,7 +26,7 @@ public class CategoryController {
     @GetMapping("user/category/{categoryId}")
     CategoryEntity findById(
             final JwtAuthenticationToken token,
-            @RequestParam(value = "categoryId", required = true) Long categoryId) {
+            @PathVariable(value = "categoryId", required = true) Long categoryId) {
         return categoryService.findUserCategoryById(token.getName(), categoryId);
     }
 
@@ -40,8 +40,8 @@ public class CategoryController {
     @PutMapping("user/category/{categoryId}")
     CategoryEntity update(
             final JwtAuthenticationToken token,
-            @RequestParam(value = "categoryId", required = true) Long categoryId,
+            @PathVariable(value = "categoryId", required = true) Long categoryId,
             @RequestBody CategoryUpdate categoryUpdate) {
-        return categoryService.update(categoryId, categoryUpdate);
+        return categoryService.update(token.getName(), categoryId, categoryUpdate);
     }
 }
