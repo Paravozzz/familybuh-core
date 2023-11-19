@@ -36,7 +36,7 @@ public class CategoryService {
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constatnts.NOT_FOUND_BY_PARAM_TEMPLATE, "Category", "id", categoryId)));
+                        MessageFormat.format(Constatnts.NOT_FOUND_BY_PARAM_TEMPLATE, Constatnts.CATEGORY, "id", categoryId)));
     }
 
     @Transactional
@@ -51,7 +51,7 @@ public class CategoryService {
         if (categories.contains(newCategory)) {
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
-                    MessageFormat.format(Constatnts.DUPLICATE_BY_PARAM_TEMPLATE, "Category", "name", newCategory.getName()));
+                    MessageFormat.format(Constatnts.DUPLICATE_BY_PARAM_TEMPLATE, Constatnts.CATEGORY, "name", newCategory.getName()));
         }
         categories.add(newCategory);
         userInfoRepository.save(userInfo);
@@ -69,7 +69,7 @@ public class CategoryService {
         if (categories.stream().noneMatch(c -> Objects.equals(c.getId(), categoryId))) {
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
-                    MessageFormat.format(Constatnts.DUPLICATE_BY_PARAM_TEMPLATE, "Category", "id", categoryId));
+                    MessageFormat.format(Constatnts.DUPLICATE_BY_PARAM_TEMPLATE, Constatnts.CATEGORY, "id", categoryId));
         }
         return categoryRepository.save(categoryMapper.map(categoryId, categoryUpdate));
     }
