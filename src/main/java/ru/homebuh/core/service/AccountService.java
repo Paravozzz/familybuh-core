@@ -3,7 +3,6 @@ package ru.homebuh.core.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.homebuh.core.controller.dto.AccountCreate;
 import ru.homebuh.core.controller.dto.MasterAccountCreate;
 import ru.homebuh.core.domain.AccountEntity;
 import ru.homebuh.core.mapper.AccountMapper;
@@ -18,11 +17,6 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
-
-    @Transactional
-    public AccountEntity createAccount(AccountCreate accountCreate) {
-        return accountRepository.save(accountMapper.map(accountCreate));
-    }
 
     @Transactional
     public AccountEntity createMasterAccount(MasterAccountCreate masterAccountCreate) {
