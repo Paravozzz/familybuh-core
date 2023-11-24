@@ -12,7 +12,7 @@ import ru.homebuh.core.domain.UserInfoEntity;
 import ru.homebuh.core.mapper.CategoryMapper;
 import ru.homebuh.core.repository.CategoryRepository;
 import ru.homebuh.core.repository.UserInfoRepository;
-import ru.homebuh.core.util.Constatnts;
+import ru.homebuh.core.util.Constants;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -36,7 +36,7 @@ public class CategoryService {
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constatnts.NOT_FOUND_BY_PARAM_TEMPLATE, Constatnts.CATEGORY, "id", categoryId)));
+                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.CATEGORY, "id", categoryId)));
     }
 
     @Transactional
@@ -45,13 +45,13 @@ public class CategoryService {
         UserInfoEntity userInfo = userInfoRepository.findByIdIgnoreCase(userInfoId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constatnts.NOT_FOUND_BY_PARAM_TEMPLATE, "User", "id", userInfoId)));
+                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, "User", "id", userInfoId)));
 
         List<CategoryEntity> categories = userInfo.getCategories();
         if (categories.contains(newCategory)) {
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
-                    MessageFormat.format(Constatnts.DUPLICATE_BY_PARAM_TEMPLATE, Constatnts.CATEGORY, "name", newCategory.getName()));
+                    MessageFormat.format(Constants.DUPLICATE_BY_PARAM_TEMPLATE, Constants.CATEGORY, "name", newCategory.getName()));
         }
         categories.add(newCategory);
         userInfoRepository.save(userInfo);
@@ -63,13 +63,13 @@ public class CategoryService {
         UserInfoEntity userInfo = userInfoRepository.findByIdIgnoreCase(userInfoId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constatnts.NOT_FOUND_BY_PARAM_TEMPLATE, "User", "id", userInfoId)));
+                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, "User", "id", userInfoId)));
 
         List<CategoryEntity> categories = userInfo.getCategories();
         if (categories.stream().noneMatch(c -> Objects.equals(c.getId(), categoryId))) {
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
-                    MessageFormat.format(Constatnts.DUPLICATE_BY_PARAM_TEMPLATE, Constatnts.CATEGORY, "id", categoryId));
+                    MessageFormat.format(Constants.DUPLICATE_BY_PARAM_TEMPLATE, Constants.CATEGORY, "id", categoryId));
         }
         return categoryRepository.save(categoryMapper.map(categoryId, categoryUpdate));
     }

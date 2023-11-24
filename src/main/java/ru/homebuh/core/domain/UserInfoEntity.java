@@ -44,4 +44,13 @@ public class UserInfoEntity {
     )
     @JsonIgnore
     private List<CategoryEntity> categories = new ArrayList<>(0);
+
+    @ManyToMany(cascade = {CascadeType.ALL})
+    @JoinTable(
+            name = "user_info_setting",
+            joinColumns = {@JoinColumn(name = "user_info_id")},
+            inverseJoinColumns = {@JoinColumn(name = "setting_id")}
+    )
+    @JsonIgnore
+    private List<SettingEntity> settings = new ArrayList<>(0);
 }

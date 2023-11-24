@@ -13,7 +13,7 @@ import ru.homebuh.core.mapper.AccountMapper;
 import ru.homebuh.core.repository.AccountRepository;
 import ru.homebuh.core.repository.CurrencyRepository;
 import ru.homebuh.core.repository.UserInfoRepository;
-import ru.homebuh.core.util.Constatnts;
+import ru.homebuh.core.util.Constants;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -41,12 +41,12 @@ public class CurrencyService {
         UserInfoEntity userInfoEntity = optionalUserInfo
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constatnts.NOT_FOUND_BY_PARAM_TEMPLATE, "User", "id", userId)));
+                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, "User", "id", userId)));
 
         CurrencyEntity currencyEntity = currencyRepository.findByCodeIgnoreCase(currencyCode)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constatnts.NOT_FOUND_BY_PARAM_TEMPLATE, "Currency", "code", currencyCode)));
+                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, "Currency", "code", currencyCode)));
 
         if (!userInfoEntity.getCurrencies().contains(currencyEntity)) {
             userInfoEntity.getCurrencies().add(currencyEntity);
@@ -65,12 +65,12 @@ public class CurrencyService {
         optionalUserInfo
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constatnts.NOT_FOUND_BY_PARAM_TEMPLATE, "User", "id", userId)));
+                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, "User", "id", userId)));
 
         CurrencyEntity currencyEntity = currencyRepository.findByCodeIgnoreCase(currencyCode)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constatnts.NOT_FOUND_BY_PARAM_TEMPLATE, "Currency", "code", currencyCode)));
+                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, "Currency", "code", currencyCode)));
 
         throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, currencyEntity.toString());
     }
