@@ -4,11 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import ru.homebuh.core.controller.dto.SettingCreate;
-import ru.homebuh.core.controller.dto.SettingUpdate;
-import ru.homebuh.core.domain.SettingEntity;
+import ru.homebuh.core.controller.dto.SettingDto;
 import ru.homebuh.core.service.SettingService;
-
-import java.util.Collection;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,31 +14,17 @@ public class SettingController {
 
     private final SettingService settingService;
 
-    @GetMapping("user/settings")
-    Collection<SettingEntity> getAll(
-            final JwtAuthenticationToken token) {
-        return settingService.findAllByUserId(token.getName());
-    }
-
-    @GetMapping("user/setting/{settingId}")
-    SettingEntity findById(
+    @GetMapping("user/setting/name/{name}")
+    SettingDto findById(
             final JwtAuthenticationToken token,
-            @PathVariable(value = "settingId", required = true) Long settingId) {
-        return settingService.findUserSettingById(token.getName(), settingId);
+            @PathVariable(value = "name", required = true) String name) {
+        return settingService.findUserSettingByName(token.getName(), name);
     }
 
     @PostMapping("user/setting")
-    SettingEntity create(
+    SettingDto create(
             final JwtAuthenticationToken token,
             @RequestBody SettingCreate settingCreate) {
-        return settingService.create(token.getName(), settingCreate);
-    }
-
-    @PutMapping("user/setting/{settingId}")
-    SettingEntity update(
-            final JwtAuthenticationToken token,
-            @PathVariable(value = "settingId", required = true) Long settingId,
-            @RequestBody SettingUpdate settingUpdate) {
-        return settingService.update(token.getName(), settingId, settingUpdate);
+        return settingService.save(token.getName(), settingCreate);
     }
 }

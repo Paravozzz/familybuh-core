@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ru.homebuh.core.controller.dto.SettingCreate;
-import ru.homebuh.core.controller.dto.SettingUpdate;
+import ru.homebuh.core.controller.dto.SettingDto;
 import ru.homebuh.core.domain.SettingEntity;
 import ru.homebuh.core.domain.UserInfoEntity;
 import ru.homebuh.core.mapper.SettingMapper;
@@ -16,7 +16,7 @@ import ru.homebuh.core.util.Constants;
 
 import java.text.MessageFormat;
 import java.util.List;
-import java.util.Objects;
+import java.util.function.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -25,22 +25,26 @@ public class SettingService {
     private final UserInfoRepository userInfoRepository;
     private final SettingMapper settingMapper;
 
-    public List<SettingEntity> findAllByUserId(String id) {
-        return settingRepository.findAllByUserId(id);
+    private static Predicate<SettingEntity> settingFilterByName(String name) {
+        return s -> name != null && !name.isBlank() && s.getName().equalsIgnoreCase(name);
     }
 
-    public SettingEntity findUserSettingById(String userInfoId, Long settingId) {
+    public SettingDto findUserSettingByName(String userInfoId, String name) {
         List<SettingEntity> usersSettings = settingRepository.findAllByUserId(userInfoId);
-        return usersSettings.stream()
-                .filter(settingEntity -> Objects.equals(settingEntity.getId(), settingId))
+        SettingEntity settingEntity = usersSettings.stream()
+                .filter(settingFilterByName(name))
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.SETTING, "id", settingId)));
+                .orElse(null);
+        if (settingEntity == null) {
+            settingEntity = new SettingEntity();
+            settingEntity.setName(name);
+            settingEntity.setValue("");
+        }
+        return settingMapper.map(settingEntity);
     }
 
     @Transactional
-    public SettingEntity create(String userInfoId, SettingCreate settingCreate) {
+    public SettingDto save(String userInfoId, SettingCreate settingCreate) {
         SettingEntity newSetting = settingMapper.map(settingCreate);
         UserInfoEntity userInfo = userInfoRepository.findByIdIgnoreCase(userInfoId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -48,29 +52,19 @@ public class SettingService {
                         MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.USER, "id", userInfoId)));
 
         List<SettingEntity> settings = userInfo.getSettings();
-        if (settings.contains(newSetting)) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
-                    MessageFormat.format(Constants.DUPLICATE_BY_PARAM_TEMPLATE, Constants.SETTING, "name", newSetting.getName()));
-        }
-        settings.add(newSetting);
-        userInfoRepository.save(userInfo);
-        return newSetting;
-    }
+        final String name = newSetting.getName();
+        SettingEntity existentSetting = settings.stream()
+                .filter(settingFilterByName(name))
+                .findFirst()
+                .orElse(null);
 
-    @Transactional
-    public SettingEntity update(String userInfoId, Long settingId, SettingUpdate settingUpdate) {
-        UserInfoEntity userInfo = userInfoRepository.findByIdIgnoreCase(userInfoId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.USER, "id", userInfoId)));
-
-        List<SettingEntity> settings = userInfo.getSettings();
-        if (settings.stream().noneMatch(c -> Objects.equals(c.getId(), settingId))) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
-                    MessageFormat.format(Constants.DUPLICATE_BY_PARAM_TEMPLATE, Constants.SETTING, "id", settingId));
+        if (existentSetting != null) {
+            existentSetting.setValue(newSetting.getValue());
+            return settingMapper.map(settingRepository.save(existentSetting));
+        } else {
+            settings.add(newSetting);
+            userInfoRepository.save(userInfo);
+            return findUserSettingByName(userInfoId, newSetting.getName());
         }
-        return settingRepository.save(settingMapper.map(settingId, settingUpdate));
     }
 }

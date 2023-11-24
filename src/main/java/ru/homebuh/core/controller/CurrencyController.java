@@ -21,6 +21,11 @@ public class CurrencyController {
         return currencyService.findAll();
     }
 
+    @GetMapping("currency/{currencyCode}")
+    CurrencyEntity findByCode(@PathVariable String currencyCode) {
+        return currencyService.findByCode(currencyCode);
+    }
+
     @GetMapping("user/currencies")
     Collection<CurrencyEntity> getAll(final JwtAuthenticationToken token) {
         return currencyService.findAllByUserId(token.getName());
