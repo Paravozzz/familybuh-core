@@ -19,6 +19,19 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     List<AccountEntity> findAllByUserIdIgnoreCase(String userId);
 
     /**
+     * Найти обычный счет пользователя
+     * @param userId       идентификатор пользователя
+     * @param accountId    идентификатор счёта
+     * @param currencyCode буквенный код валюты счёта
+     * @return обычный счет
+     */
+    @Query("select account from AccountEntity account where lower(account.userInfo.id) = lower(?1) " +
+            "and lower(account.userInfo.id) <> lower(account.name) " +
+            "and account.id = ?2 " +
+            "and account.currency.code = upper(?3)")
+    Optional<AccountEntity> findAccount(String userId, Long accountId, String currencyCode);
+
+    /**
      * Найти все мастер-счета пользователя
      * @param userId идентификатор пользователя
      * @return список мастер-счетов
@@ -30,11 +43,11 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     /**
      * Найти мастер-счет пользователя
      * @param userId идентификатор пользователя
-     * @param currencyId цифровой код валюты
+     * @param currencyCode буквенный код валюты
      * @return мастер-счет
      */
     @Query("select account from AccountEntity account where lower(account.userInfo.id) = lower(?1) " +
-            "and lower(account.userInfo.id) = lower(account.name)" +
-            "and account.currency.id = upper(?2)")
-    Optional<AccountEntity> findMasterByUserIdIgnoreCaseAndCurrencyId(String userId, String currencyId);
+            "and lower(account.userInfo.id) = lower(account.name) " +
+            "and account.currency.code = upper(?2)")
+    Optional<AccountEntity> findMasterByUserIdIgnoreCaseAndCurrencyCode(String userId, String currencyCode);
 }

@@ -98,10 +98,7 @@
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="debit" type="numeric(38, 2)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="credit" type="numeric(38, 2)">
+            <column name="amount" type="numeric(38, 2)">
                 <constraints nullable="false"/>
             </column>
             <column name="debit_account_id" type="bigint">
@@ -115,6 +112,9 @@
             <column name="category_id" type="bigint">
                 <constraints nullable="false" foreignKeyName="fk_operation_category" referencedTableName="category"
                              referencedColumnNames="id" deleteCascade="false"/>
+            </column>
+            <column name="description" type="varchar(255)">
+                <constraints nullable="true"/>
             </column>
             <column name="time" type="timestamp(6)" defaultOnNull="true" defaultValueComputed="${now}">
                 <constraints nullable="false"/>

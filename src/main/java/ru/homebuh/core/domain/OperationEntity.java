@@ -25,33 +25,33 @@ public class OperationEntity {
     @JsonProperty("id")
     private Long id;
 
-    @Column(name = "debit", nullable = false)
+    @Column(name = "amount", nullable = false)
     @Order(2)
-    @JsonProperty("debit")
-    private BigDecimal debit;
-
-    @Column(name = "credit", nullable = false)
-    @Order(3)
-    @JsonProperty("credit")
-    private BigDecimal credit;
+    @JsonProperty("amount")
+    private BigDecimal amount;
 
     @ManyToOne
     @JoinColumn(name = "debit_account_id", nullable = false)
-    @Order(4)
+    @Order(3)
     @JsonProperty("debitAccount")
     private AccountEntity debitAccount;
 
     @ManyToOne
     @JoinColumn(name = "credit_account_id", nullable = false)
-    @Order(5)
+    @Order(4)
     @JsonProperty("creditAccount")
     private AccountEntity creditAccount;
 
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
-    @Order(6)
+    @Order(5)
     @JsonProperty("category")
     private CategoryEntity category;
+
+    @Column(name = "description")
+    @Order(6)
+    @JsonProperty("description")
+    private String description;
 
     @Column(name = "time", nullable = false)
     @Order(7)

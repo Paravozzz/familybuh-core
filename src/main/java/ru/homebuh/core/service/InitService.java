@@ -92,7 +92,7 @@ public class InitService {
 
         //4. У каждой валюты, которая есть у пользователя, должен быть создан мастер-счёт
         Collection<CurrencyEntity> currenciesWithoutMasterAccount = findCurrenciesWithoutMasterAccount(userCurrencies, allMasterAccounts);
-        currenciesWithoutMasterAccount.forEach(currency -> createMaserAccountByCurrency(userId, currency));
+        currenciesWithoutMasterAccount.forEach(currency -> createMaserAccountByCurrency(userId, currency.getCode()));
 
         //5. У пользователя должен быть создан хотя бы один счёт
         List<AccountEntity> userAccounts = accountService.findAllByUserIdIgnoreCase(userId);
@@ -128,10 +128,10 @@ public class InitService {
         }
     }
 
-    private void createMaserAccountByCurrency(String userId, CurrencyEntity initCurrency) {
-        final Optional<AccountEntity> optionalMasterAccount = accountService.findMasterByUserIdIgnoreCaseAndCurrencyId(userId, initCurrency.getId());
+    private void createMaserAccountByCurrency(String userId, String currencyCode) {
+        final Optional<AccountEntity> optionalMasterAccount = accountService.findMasterByUserIdIgnoreCaseAndCurrencyCode(userId, currencyCode);
         if (optionalMasterAccount.isEmpty()) {
-            accountService.createMasterAccount(new MasterAccountCreate(initCurrency.getCode(), userId));
+            accountService.createMasterAccount(new MasterAccountCreate(currencyCode, userId));
         }
     }
 

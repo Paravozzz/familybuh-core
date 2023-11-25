@@ -19,6 +19,10 @@ public class UserInfoService {
     private final UserInfoRepository userInfoRepository;
     private final UserInfoMapper mapper;
 
+    public void isUserExists(String id) {
+        findByIdIgnoreCase(id);
+    }
+
     @Transactional
     public UserInfoEntity create(UserInfoCreate userInfoCreate) {
         return userInfoRepository.save(mapper.map(userInfoCreate));
@@ -32,8 +36,8 @@ public class UserInfoService {
     }
 
     @Transactional
-    public UserInfoEntity save(UserInfoEntity userInfoEntity) {
-        return userInfoRepository.save(userInfoEntity);
+    public void save(UserInfoEntity userInfoEntity) {
+        userInfoRepository.save(userInfoEntity);
     }
 
 }

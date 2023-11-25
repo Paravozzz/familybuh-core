@@ -10,8 +10,6 @@ import ru.homebuh.core.controller.dto.OperationCreate;
 import ru.homebuh.core.controller.dto.OperationDto;
 import ru.homebuh.core.service.OperationService;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api")
@@ -19,14 +17,14 @@ public class OperationController {
     private final OperationService operationService;
 
     @PutMapping("user/operation/expense")
-    List<OperationDto> expenseCreate(
+    OperationDto expenseCreate(
             final JwtAuthenticationToken token,
             @RequestBody OperationCreate operationCreate) {
         return operationService.expenseCreate(token.getName(), operationCreate);
     }
 
     @PutMapping("user/operation/income")
-    List<OperationDto> incomeCreate(
+    OperationDto incomeCreate(
             final JwtAuthenticationToken token,
             @RequestBody OperationCreate operationCreate) {
         return operationService.incomeCreate(token.getName(), operationCreate);

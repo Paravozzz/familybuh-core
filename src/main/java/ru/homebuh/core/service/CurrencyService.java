@@ -50,7 +50,7 @@ public class CurrencyService {
 
     @Transactional
     public CurrencyEntity detachCurrencyToUser(String userId, String currencyCode) {
-        UserInfoEntity userInfo = userInfoService.findByIdIgnoreCase(userId); //NOSONAR
+        userInfoService.isUserExists(userId);
 
         CurrencyEntity currencyEntity = currencyRepository.findByCodeIgnoreCase(currencyCode)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -72,5 +72,15 @@ public class CurrencyService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.CURRENCY, "code", currencyCode)));
+    }
+
+    /**
+     * Проверяет наличие валюты с кодом в справочнике валют
+     *
+     * @param currencyCode буквенный код
+     * @throws ResponseStatusException если валюта не найдена в справочнике валют
+     */
+    public void isCurrencyExists(String currencyCode) {
+        findByCode(currencyCode);
     }
 }
