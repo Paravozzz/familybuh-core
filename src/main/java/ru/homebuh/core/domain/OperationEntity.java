@@ -18,7 +18,7 @@ import java.sql.Timestamp;
 @Table(name = "operation")
 public class OperationEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     @Order(1)
     @EqualsAndHashCode.Exclude

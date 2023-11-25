@@ -16,7 +16,7 @@ import org.springframework.core.annotation.Order;
 @NoArgsConstructor
 public class AccountEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id", nullable = false)
     @Order(1)
     @EqualsAndHashCode.Exclude

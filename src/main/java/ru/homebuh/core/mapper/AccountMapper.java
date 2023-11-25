@@ -11,7 +11,7 @@ import ru.homebuh.core.domain.AccountEntity;
 import ru.homebuh.core.domain.CurrencyEntity;
 import ru.homebuh.core.domain.UserInfoEntity;
 import ru.homebuh.core.repository.CurrencyRepository;
-import ru.homebuh.core.repository.UserInfoRepository;
+import ru.homebuh.core.service.UserInfoService;
 import ru.homebuh.core.util.Constants;
 
 import java.text.MessageFormat;
@@ -20,7 +20,7 @@ import java.text.MessageFormat;
 public abstract class AccountMapper {
 
     @Autowired
-    protected UserInfoRepository userInfoRepository;
+    protected UserInfoService userInfoRepository;
 
     @Autowired
     protected CurrencyRepository currencyRepository;
@@ -38,11 +38,7 @@ public abstract class AccountMapper {
     public abstract AccountEntity map(MasterAccountCreate source);
 
     protected UserInfoEntity fetchUserInfo(String id) {
-        return userInfoRepository
-                .findByIdIgnoreCase(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.USER, "id", id)
-                ));
+        return userInfoRepository.findByIdIgnoreCase(id);
     }
 
     protected CurrencyEntity fetchCurrency(String code) {

@@ -120,5 +120,46 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+
+        <createTable tableName="user_info_category">
+            <column name="user_info_id" type="varchar(36)" autoIncrement="false">
+                <constraints nullable="false" foreignKeyName="fk_user_info" referencedTableName="user_info"
+                             referencedColumnNames="id"/>
+            </column>
+            <column name="category_id" type="bigint" autoIncrement="false">
+                <constraints nullable="false" foreignKeyName="fk_category" referencedTableName="category"
+                             referencedColumnNames="id"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="user_info_category" columnNames="user_info_id, category_id" constraintName="pk_user_info_category"/>
+
+        <createTable tableName="setting">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="user_info_setting">
+            <column name="user_info_id" type="varchar(36)" autoIncrement="false">
+                <constraints nullable="false" foreignKeyName="fk_user_info" referencedTableName="user_info"
+                             referencedColumnNames="id"/>
+            </column>
+            <column name="setting_id" type="bigint" autoIncrement="false">
+                <constraints nullable="false" foreignKeyName="fk_setting" referencedTableName="setting"
+                             referencedColumnNames="id"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="user_info_setting" columnNames="user_info_id, setting_id" constraintName="pk_user_info_setting"/>
+
+
+
     </changeSet>
 </databaseChangeLog>

@@ -3,7 +3,8 @@ package ru.homebuh.core.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.homebuh.core.controller.dto.OperationCreate;
-import ru.homebuh.core.domain.OperationEntity;
+import ru.homebuh.core.controller.dto.OperationDto;
+import ru.homebuh.core.domain.UserInfoEntity;
 import ru.homebuh.core.repository.OperationRepository;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OperationService {
 
+    private final UserInfoService userInfoService;
     private final OperationRepository operationRepository;
 
     /**
@@ -22,7 +24,8 @@ public class OperationService {
      * @param operationCreate данные
      * @return список операций за день
      */
-    public List<OperationEntity> expenseCreate(String userId, OperationCreate operationCreate) {
+    public List<OperationDto> expenseCreate(String userId, OperationCreate operationCreate) {
+        UserInfoEntity userInfo = userInfoService.findByIdIgnoreCase(userId);
         return new ArrayList<>(0);
     }
 
@@ -33,7 +36,8 @@ public class OperationService {
      * @param operationCreate данные
      * @return список операций за день
      */
-    public List<OperationEntity> incomeCreate(String userId, OperationCreate operationCreate) {
+    public List<OperationDto> incomeCreate(String userId, OperationCreate operationCreate) {
+        UserInfoEntity userInfo = userInfoService.findByIdIgnoreCase(userId);
         return new ArrayList<>(0);
     }
 }

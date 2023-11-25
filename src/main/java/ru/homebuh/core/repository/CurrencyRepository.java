@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface CurrencyRepository extends JpaRepository<CurrencyEntity, String> {
-    @Query("select user.currencies from UserInfoEntity user where user.id = ?1")
+    @Query("select distinct user.currencies from UserInfoEntity user where user.id = ?1")
     List<CurrencyEntity> findAllByUserId(String id);
 
     Optional<CurrencyEntity> findByCodeIgnoreCase(String code);

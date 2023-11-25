@@ -1,7 +1,10 @@
 package ru.homebuh.core.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.sql.Timestamp;
 
@@ -9,7 +12,11 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @Getter
 @Setter
-public class OperationCreate {
+public class OperationDto {
+
+    @JsonProperty("operationId")
+    private Long operationId;
+
     @JsonProperty("amount")
     private String amount;
 
@@ -19,8 +26,8 @@ public class OperationCreate {
     @JsonProperty("accountId")
     private Long accountId;
 
-    @JsonProperty("categoryId")
-    private Long categoryId;
+    @JsonProperty("category")
+    private String category;
 
     @JsonProperty("description")
     private String description;

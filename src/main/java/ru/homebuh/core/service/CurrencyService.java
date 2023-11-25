@@ -6,26 +6,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ru.homebuh.core.controller.dto.MasterAccountCreate;
-import ru.homebuh.core.domain.AccountEntity;
 import ru.homebuh.core.domain.CurrencyEntity;
 import ru.homebuh.core.domain.UserInfoEntity;
-import ru.homebuh.core.mapper.AccountMapper;
-import ru.homebuh.core.repository.AccountRepository;
 import ru.homebuh.core.repository.CurrencyRepository;
-import ru.homebuh.core.repository.UserInfoRepository;
 import ru.homebuh.core.util.Constants;
 
 import java.text.MessageFormat;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class CurrencyService {
     private final CurrencyRepository currencyRepository;
-    private final UserInfoRepository userInfoRepository;
-    private final AccountRepository accountRepository;
-    private final AccountMapper accountMapper;
+    private final UserInfoService userInfoService;
+    private final AccountService accountService;
 
     public List<CurrencyEntity> findAllByUserId(String id) {
         return currencyRepository.findAllByUserId(id);
@@ -37,11 +31,7 @@ public class CurrencyService {
 
     @Transactional
     public CurrencyEntity attachCurrencyToUser(String userId, String currencyCode) {
-        Optional<UserInfoEntity> optionalUserInfo = userInfoRepository.findByIdIgnoreCase(userId);
-        UserInfoEntity userInfoEntity = optionalUserInfo
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.USER, "id", userId)));
+        UserInfoEntity userInfoEntity = userInfoService.findByIdIgnoreCase(userId);
 
         CurrencyEntity currencyEntity = currencyRepository.findByCodeIgnoreCase(currencyCode)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -50,10 +40,9 @@ public class CurrencyService {
 
         if (!userInfoEntity.getCurrencies().contains(currencyEntity)) {
             userInfoEntity.getCurrencies().add(currencyEntity);
-            userInfoRepository.save(userInfoEntity);
+            userInfoService.save(userInfoEntity);
 
-            AccountEntity masterAccountEntity = accountMapper.map(new MasterAccountCreate(currencyEntity.getCode(), userInfoEntity.getId()));
-            accountRepository.save(masterAccountEntity);
+            accountService.createMasterAccount(new MasterAccountCreate(currencyEntity.getCode(), userInfoEntity.getId()));
         }
 
         return currencyEntity;
@@ -61,11 +50,7 @@ public class CurrencyService {
 
     @Transactional
     public CurrencyEntity detachCurrencyToUser(String userId, String currencyCode) {
-        Optional<UserInfoEntity> optionalUserInfo = userInfoRepository.findByIdIgnoreCase(userId);
-        optionalUserInfo
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.USER, "id", userId)));
+        UserInfoEntity userInfo = userInfoService.findByIdIgnoreCase(userId); //NOSONAR
 
         CurrencyEntity currencyEntity = currencyRepository.findByCodeIgnoreCase(currencyCode)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -75,6 +60,13 @@ public class CurrencyService {
         throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, currencyEntity.toString());
     }
 
+    /**
+     * Поиск валюты по буквенному коду
+     *
+     * @param currencyCode буквенный код
+     * @return валюта
+     * @throws ResponseStatusException если валюта не найдена в справочнике валют
+     */
     public CurrencyEntity findByCode(String currencyCode) {
         return currencyRepository.findByCodeIgnoreCase(currencyCode)
                 .orElseThrow(() -> new ResponseStatusException(

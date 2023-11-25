@@ -18,12 +18,11 @@ public class InitController {
 
     /**
      * Проверяет, все ли начальные параметры заданы для текущего пользователя
-     *
      * @param token JWT
      */
     @GetMapping("init")
     public ResponseEntity<Boolean> isUserInit(final JwtAuthenticationToken token) {
-        return initService.isUserInitResponse(token.getName());
+        return new ResponseEntity<>(initService.isUserInit(token.getName()), HttpStatus.OK);
     }
 
     /**

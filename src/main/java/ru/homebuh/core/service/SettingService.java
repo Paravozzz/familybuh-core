@@ -1,20 +1,15 @@
 package ru.homebuh.core.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 import ru.homebuh.core.controller.dto.SettingCreate;
 import ru.homebuh.core.controller.dto.SettingDto;
 import ru.homebuh.core.domain.SettingEntity;
 import ru.homebuh.core.domain.UserInfoEntity;
 import ru.homebuh.core.mapper.SettingMapper;
 import ru.homebuh.core.repository.SettingRepository;
-import ru.homebuh.core.repository.UserInfoRepository;
-import ru.homebuh.core.util.Constants;
 
-import java.text.MessageFormat;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -22,8 +17,8 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 public class SettingService {
     private final SettingRepository settingRepository;
-    private final UserInfoRepository userInfoRepository;
     private final SettingMapper settingMapper;
+    private final UserInfoService userInfoService;
 
     private static Predicate<SettingEntity> settingFilterByName(String name) {
         return s -> name != null && !name.isBlank() && s.getName().equalsIgnoreCase(name);
@@ -46,10 +41,7 @@ public class SettingService {
     @Transactional
     public SettingDto save(String userInfoId, SettingCreate settingCreate) {
         SettingEntity newSetting = settingMapper.map(settingCreate);
-        UserInfoEntity userInfo = userInfoRepository.findByIdIgnoreCase(userInfoId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.USER, "id", userInfoId)));
+        UserInfoEntity userInfo = userInfoService.findByIdIgnoreCase(userInfoId);
 
         List<SettingEntity> settings = userInfo.getSettings();
         final String name = newSetting.getName();
@@ -63,7 +55,7 @@ public class SettingService {
             return settingMapper.map(settingRepository.save(existentSetting));
         } else {
             settings.add(newSetting);
-            userInfoRepository.save(userInfo);
+            userInfoService.save(userInfo);
             return findUserSettingByName(userInfoId, newSetting.getName());
         }
     }

@@ -1,26 +1,17 @@
 package ru.homebuh.core.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-import ru.homebuh.core.controller.dto.InitCreate;
-import ru.homebuh.core.controller.dto.MasterAccountCreate;
-import ru.homebuh.core.controller.dto.UserInfoCreate;
+import ru.homebuh.core.controller.dto.*;
 import ru.homebuh.core.domain.AccountEntity;
+import ru.homebuh.core.domain.CategoryEntity;
 import ru.homebuh.core.domain.CurrencyEntity;
 import ru.homebuh.core.domain.UserInfoEntity;
-import ru.homebuh.core.repository.CurrencyRepository;
 import ru.homebuh.core.repository.UserInfoRepository;
 import ru.homebuh.core.util.Constants;
 
-import java.text.MessageFormat;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,64 +20,15 @@ public class InitService {
 
     private final UserInfoService userInfoService;
     private final AccountService accountService;
+    private final CurrencyService currencyService;
+    private final CategoryService categoryService;
     private final UserInfoRepository userInfoRepository;
-    private final CurrencyRepository currencyRepository;
 
-    private static Set<CurrencyEntity> findCurrenciesWithoutMasterAccount(Set<CurrencyEntity> userCurrencies, List<AccountEntity> allMasterAccounts) {
+    private static Collection<CurrencyEntity> findCurrenciesWithoutMasterAccount(Collection<CurrencyEntity> userCurrencies, List<AccountEntity> allMasterAccounts) {
         Set<CurrencyEntity> currenciesWithoutMasterAccounts = new HashSet<>(userCurrencies);
         Set<CurrencyEntity> masterCurrencies = allMasterAccounts.stream().map(AccountEntity::getCurrency).collect(Collectors.toSet());
         currenciesWithoutMasterAccounts.removeAll(masterCurrencies);
         return currenciesWithoutMasterAccounts;
-    }
-
-    @Transactional
-    public void initUser(String userId, InitCreate initCreate) {
-        final UserInfoEntity userInfoEntity;
-        Optional<UserInfoEntity> optionalUserInfo = userInfoRepository.findByIdIgnoreCase(userId);
-        userInfoEntity = optionalUserInfo.orElseGet(() -> userInfoService.create(new UserInfoCreate(userId)));
-
-        final String initCurrencyCode = initCreate.getCurrencyCode();
-        CurrencyEntity initCurrency = currencyRepository.findByCodeIgnoreCase(initCurrencyCode)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, "Currency", "code", initCurrencyCode)));
-
-        Set<CurrencyEntity> userCurrencies = userInfoEntity.getCurrencies();
-        if (userCurrencies.isEmpty() || !userCurrencies.contains(initCurrency)) {
-            userCurrencies.add(initCurrency);
-            userInfoRepository.save(userInfoEntity);
-        }
-        List<AccountEntity> allMasterAccounts = accountService.findAllMasterByUserIdIgnoreCase(userId);
-        Set<CurrencyEntity> currenciesWithoutMasterAccount = findCurrenciesWithoutMasterAccount(userCurrencies, allMasterAccounts);
-        currenciesWithoutMasterAccount.forEach(currency -> createMaserAccountByCurrency(userId, currency));
-    }
-
-    private void createMaserAccountByCurrency(String userId, CurrencyEntity initCurrency) {
-        final Optional<AccountEntity> optionalMasterAccount = accountService.findMasterByUserIdIgnoreCaseAndCurrencyId(userId, initCurrency.getId());
-        if (optionalMasterAccount.isEmpty()) {
-            accountService.createMasterAccount(new MasterAccountCreate(initCurrency.getCode(), userId));
-        }
-    }
-
-    private boolean checkInit(String userId) {
-        //1. Пользователь должен существовать
-        final Optional<UserInfoEntity> userInfoEntityOptional = userInfoRepository.findByIdIgnoreCase(userId);
-        if (userInfoEntityOptional.isEmpty())
-            return false;
-
-        //2. У пользователя должна быть задана хотя бы одна валюта
-        final UserInfoEntity userInfoEntity = userInfoEntityOptional.get();
-        Set<CurrencyEntity> userCurrencies = userInfoEntity.getCurrencies();
-        if (userCurrencies.isEmpty())
-            return false;
-
-        //3. У пользователя должны быть созданы мастер-счёта
-        final List<AccountEntity> allMasterAccounts = accountService.findAllMasterByUserIdIgnoreCase(userId);
-        if (allMasterAccounts.isEmpty())
-            return false;
-
-        //4. У каждой валюты, которая есть у пользователя, должен быть создан мастер-счёт
-        return findCurrenciesWithoutMasterAccount(userCurrencies, allMasterAccounts).isEmpty();
     }
 
     /**
@@ -96,13 +38,101 @@ public class InitService {
      * @return true, если начальная настройка приложения для текущего пользователя выполнена
      */
     @Transactional
-    public ResponseEntity<Boolean> isUserInitResponse(String userId) {
-        if (checkInit(userId)) {
-            return new ResponseEntity<>(true, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(false, HttpStatus.OK);
+    public boolean isUserInit(String userId) {
+        //1. Пользователь должен существовать
+        final Optional<UserInfoEntity> userInfoEntityOptional = userInfoRepository.findByIdIgnoreCase(userId);
+        if (userInfoEntityOptional.isEmpty())
+            return false;
+
+        //2. У пользователя должна быть задана хотя бы одна валюта
+        final UserInfoEntity userInfoEntity = userInfoEntityOptional.get();
+        Collection<CurrencyEntity> userCurrencies = userInfoEntity.getCurrencies();
+        if (userCurrencies.isEmpty())
+            return false;
+
+        //3. У пользователя должны быть созданы мастер-счёта
+        final List<AccountEntity> allMasterAccounts = accountService.findAllMasterByUserIdIgnoreCase(userId);
+        if (allMasterAccounts.isEmpty())
+            return false;
+
+        //4. У каждой валюты, которая есть у пользователя, должен быть создан мастер-счёт
+        if (!findCurrenciesWithoutMasterAccount(userCurrencies, allMasterAccounts).isEmpty())
+            return false;
+
+        //5. У пользователя должен быть создан хотя бы один счёт
+        if (accountService.findAllByUserIdIgnoreCase(userId).isEmpty())
+            return false;
+
+        //6. У пользователя должна быть хотя бы одна расходная категория
+        if (categoryService.findAllExpenseByUserId(userId).isEmpty())
+            return false;
+
+        //7. У пользователя должна быть хотя бы одна доходная категория
+        return !categoryService.findAllIncomeByUserId(userId).isEmpty();
+    }
+
+    @Transactional
+    public void initUser(String userId, InitCreate initCreate) {
+        //1. Пользователь должен существовать
+        final Optional<UserInfoEntity> optionalUserInfo = userInfoRepository.findByIdIgnoreCase(userId);
+        final UserInfoEntity userInfoEntity = optionalUserInfo.orElseGet(() -> userInfoService.create(new UserInfoCreate(userId)));
+
+        //2. У пользователя должна быть задана хотя бы одна валюта
+        final String initCurrencyCode = initCreate.getCurrencyCode();
+        CurrencyEntity initCurrency = currencyService.findByCode(initCurrencyCode);
+
+        List<CurrencyEntity> userCurrencies = userInfoEntity.getCurrencies();
+        if (userCurrencies.isEmpty() || !userCurrencies.contains(initCurrency)) {
+            userCurrencies.add(initCurrency);
+            userInfoService.save(userInfoEntity);
+        }
+
+        //3. У пользователя должны быть созданы мастер-счёта
+        List<AccountEntity> allMasterAccounts = accountService.findAllMasterByUserIdIgnoreCase(userId);
+
+        //4. У каждой валюты, которая есть у пользователя, должен быть создан мастер-счёт
+        Collection<CurrencyEntity> currenciesWithoutMasterAccount = findCurrenciesWithoutMasterAccount(userCurrencies, allMasterAccounts);
+        currenciesWithoutMasterAccount.forEach(currency -> createMaserAccountByCurrency(userId, currency));
+
+        //5. У пользователя должен быть создан хотя бы один счёт
+        List<AccountEntity> userAccounts = accountService.findAllByUserIdIgnoreCase(userId);
+        if (userAccounts.isEmpty()) {
+            Constants.INITIAL_ACCOUNTS.forEach(accountName -> {
+                AccountCreate accountCreate = AccountCreate.builder()
+                        .userInfoId(userId)
+                        .currencyCode(initCurrencyCode)
+                        .name(accountName)
+                        .description("")
+                        .build();
+
+                accountService.createAccount(accountCreate);
+            });
+        }
+
+        //6. У пользователя должна быть хотя бы одна расходная категория
+        List<CategoryEntity> expCategories = categoryService.findAllExpenseByUserId(userId);
+        if (expCategories.isEmpty()) {
+            Constants.INITIAL_EXPENSE_CATEGORIES.forEach(categoryName -> {
+                CategoryCreate categoryCreate = new CategoryCreate(categoryName, false);
+                categoryService.create(userId, categoryCreate);
+            });
+        }
+
+        //7. У пользователя должна быть хотя бы одна доходная категория
+        List<CategoryEntity> incCategories = categoryService.findAllIncomeByUserId(userId);
+        if (incCategories.isEmpty()) {
+            Constants.INITIAL_INCOME_CATEGORIES.forEach(categoryName -> {
+                CategoryCreate categoryCreate = new CategoryCreate(categoryName, true);
+                categoryService.create(userId, categoryCreate);
+            });
         }
     }
 
+    private void createMaserAccountByCurrency(String userId, CurrencyEntity initCurrency) {
+        final Optional<AccountEntity> optionalMasterAccount = accountService.findMasterByUserIdIgnoreCaseAndCurrencyId(userId, initCurrency.getId());
+        if (optionalMasterAccount.isEmpty()) {
+            accountService.createMasterAccount(new MasterAccountCreate(initCurrency.getCode(), userId));
+        }
+    }
 
 }

@@ -9,9 +9,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.core.annotation.Order;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 @Data
@@ -34,7 +32,7 @@ public class UserInfoEntity {
             inverseJoinColumns = {@JoinColumn(name = "currency_id")}
     )
     @JsonIgnore
-    private Set<CurrencyEntity> currencies = new HashSet<>();
+    private List<CurrencyEntity> currencies = new ArrayList<>(0);
 
     @ManyToMany(cascade = {CascadeType.ALL})
     @JoinTable(
