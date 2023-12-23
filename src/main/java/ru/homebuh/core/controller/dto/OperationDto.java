@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -32,6 +32,6 @@ public class OperationDto {
     @JsonProperty("description")
     private String description;
 
-    @JsonProperty("time")
-    private Timestamp time;
+    @JsonProperty("date")
+    private OffsetDateTime date;
 }

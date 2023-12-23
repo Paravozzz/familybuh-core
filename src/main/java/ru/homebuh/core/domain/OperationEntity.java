@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.core.annotation.Order;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 
 @Data
 @NoArgsConstructor
@@ -53,8 +53,8 @@ public class OperationEntity {
     @JsonProperty("description")
     private String description;
 
-    @Column(name = "time", nullable = false)
+    @Column(name = "date", nullable = false)
     @Order(7)
-    @JsonProperty("time")
-    private Timestamp time;
+    @JsonProperty("date")
+    private OffsetDateTime date;
 }

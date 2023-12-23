@@ -1,9 +1,12 @@
 package ru.homebuh.core.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,6 +28,6 @@ public class OperationCreate {
     @JsonProperty("description")
     private String description;
 
-    @JsonProperty("time")
-    private Timestamp time;
+    @JsonProperty("date")
+    private OffsetDateTime date;
 }

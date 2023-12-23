@@ -27,11 +27,11 @@ public class OperationService {
     private final OperationMapper operationMapper;
 
     /**
-     * Расходная операция
+     * Доходная операция
      *
      * @param userId          идентификатор пользователя
      * @param operationCreate данные
-     * @return список операций за день
+     * @return доходная операция
      */
     @Transactional
     public OperationDto expenseCreate(String userId, OperationCreate operationCreate) {
@@ -50,7 +50,8 @@ public class OperationService {
         expenseOperation.setAmount(new BigDecimal(operationCreate.getAmount()).abs());
         expenseOperation.setDebitAccount(userAccount);
         expenseOperation.setCreditAccount(masterAccount);
-        expenseOperation.setTime(operationCreate.getTime());
+        expenseOperation.setDescription(operationCreate.getDescription());
+        expenseOperation.setDate(operationCreate.getDate());
 
         expenseOperation = operationRepository.save(expenseOperation);
 
@@ -62,7 +63,7 @@ public class OperationService {
      *
      * @param userId          идентификатор пользователя
      * @param operationCreate данные
-     * @return список операций за день
+     * @return доходная операция
      */
     @Transactional
     public OperationDto incomeCreate(String userId, OperationCreate operationCreate) {
@@ -81,7 +82,8 @@ public class OperationService {
         incomeOperation.setAmount(new BigDecimal(operationCreate.getAmount()).abs());
         incomeOperation.setDebitAccount(masterAccount);
         incomeOperation.setCreditAccount(userAccount);
-        incomeOperation.setTime(operationCreate.getTime());
+        incomeOperation.setDescription(operationCreate.getDescription());
+        incomeOperation.setDate(operationCreate.getDate());
 
         incomeOperation = operationRepository.save(incomeOperation);
 
