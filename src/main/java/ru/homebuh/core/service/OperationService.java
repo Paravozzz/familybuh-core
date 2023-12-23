@@ -10,6 +10,7 @@ import ru.homebuh.core.controller.dto.OperationDto;
 import ru.homebuh.core.domain.AccountEntity;
 import ru.homebuh.core.domain.CategoryEntity;
 import ru.homebuh.core.domain.OperationEntity;
+import ru.homebuh.core.domain.enums.OperationType;
 import ru.homebuh.core.mapper.OperationMapper;
 import ru.homebuh.core.repository.OperationRepository;
 
@@ -38,7 +39,6 @@ public class OperationService {
         userInfoService.isUserExists(userId);
         final String currencyCode = operationCreate.getCurrencyCode();
         currencyService.isCurrencyExists(currencyCode);
-        AccountEntity masterAccount = accountService.getUserMasterAccount(userId, currencyCode);
         AccountEntity userAccount = accountService.getUserAccount(userId, operationCreate.getAccountId(), currencyCode);
         final Long categoryId = operationCreate.getCategoryId();
         CategoryEntity category = categoryService.findUserCategoryById(userId, categoryId);
@@ -47,9 +47,9 @@ public class OperationService {
         }
         OperationEntity expenseOperation = new OperationEntity();
         expenseOperation.setCategory(category);
-        expenseOperation.setAmount(new BigDecimal(operationCreate.getAmount()).abs());
-        expenseOperation.setDebitAccount(userAccount);
-        expenseOperation.setCreditAccount(masterAccount);
+        expenseOperation.setAmount(new BigDecimal(operationCreate.getAmount()).abs().negate());
+        expenseOperation.setAccount(userAccount);
+        expenseOperation.setOperationType(OperationType.EXPENSE);
         expenseOperation.setDescription(operationCreate.getDescription());
         expenseOperation.setDate(operationCreate.getDate());
 
@@ -70,7 +70,6 @@ public class OperationService {
         userInfoService.isUserExists(userId);
         final String currencyCode = operationCreate.getCurrencyCode();
         currencyService.isCurrencyExists(currencyCode);
-        AccountEntity masterAccount = accountService.getUserMasterAccount(userId, currencyCode);
         AccountEntity userAccount = accountService.getUserAccount(userId, operationCreate.getAccountId(), currencyCode);
         final Long categoryId = operationCreate.getCategoryId();
         CategoryEntity category = categoryService.findUserCategoryById(userId, categoryId);
@@ -80,8 +79,8 @@ public class OperationService {
         OperationEntity incomeOperation = new OperationEntity();
         incomeOperation.setCategory(category);
         incomeOperation.setAmount(new BigDecimal(operationCreate.getAmount()).abs());
-        incomeOperation.setDebitAccount(masterAccount);
-        incomeOperation.setCreditAccount(userAccount);
+        incomeOperation.setAccount(userAccount);
+        incomeOperation.setOperationType(OperationType.INCOME);
         incomeOperation.setDescription(operationCreate.getDescription());
         incomeOperation.setDate(operationCreate.getDate());
 

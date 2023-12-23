@@ -7,9 +7,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.core.annotation.Order;
+import ru.homebuh.core.domain.enums.OperationType;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -31,16 +33,16 @@ public class OperationEntity {
     private BigDecimal amount;
 
     @ManyToOne
-    @JoinColumn(name = "debit_account_id", nullable = false)
+    @JoinColumn(name = "account_id", nullable = false)
     @Order(3)
-    @JsonProperty("debitAccount")
-    private AccountEntity debitAccount;
+    @JsonProperty("account")
+    private AccountEntity account;
 
-    @ManyToOne
-    @JoinColumn(name = "credit_account_id", nullable = false)
     @Order(4)
-    @JsonProperty("creditAccount")
-    private AccountEntity creditAccount;
+    @Column(name = "operation_type", nullable = false)
+    @Enumerated(EnumType.ORDINAL)
+    @JsonProperty("operationType")
+    private OperationType operationType;
 
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
@@ -48,13 +50,18 @@ public class OperationEntity {
     @JsonProperty("category")
     private CategoryEntity category;
 
-    @Column(name = "description")
+    @Column(name = "pair_id")
     @Order(6)
+    @JsonProperty("pairId")
+    private UUID pairId;
+
+    @Column(name = "description")
+    @Order(7)
     @JsonProperty("description")
     private String description;
 
     @Column(name = "date", nullable = false)
-    @Order(7)
+    @Order(8)
     @JsonProperty("date")
     private OffsetDateTime date;
 }

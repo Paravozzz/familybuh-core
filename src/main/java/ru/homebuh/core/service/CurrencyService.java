@@ -5,7 +5,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import ru.homebuh.core.controller.dto.MasterAccountCreate;
 import ru.homebuh.core.domain.CurrencyEntity;
 import ru.homebuh.core.domain.UserInfoEntity;
 import ru.homebuh.core.repository.CurrencyRepository;
@@ -19,7 +18,6 @@ import java.util.List;
 public class CurrencyService {
     private final CurrencyRepository currencyRepository;
     private final UserInfoService userInfoService;
-    private final AccountService accountService;
 
     public List<CurrencyEntity> findAllByUserId(String id) {
         return currencyRepository.findAllByUserId(id);
@@ -41,8 +39,6 @@ public class CurrencyService {
         if (!userInfoEntity.getCurrencies().contains(currencyEntity)) {
             userInfoEntity.getCurrencies().add(currencyEntity);
             userInfoService.save(userInfoEntity);
-
-            accountService.createMasterAccount(new MasterAccountCreate(currencyEntity.getCode(), userInfoEntity.getId()));
         }
 
         return currencyEntity;
