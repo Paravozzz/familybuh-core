@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.homebuh.core.domain.enums.OperationType;
+import ru.homebuh.core.domain.enums.OperationTypeEnum;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -29,7 +29,7 @@ public class OperationDto {
     private Long accountId;
 
     @JsonProperty("operationType")
-    private OperationType operationType;
+    private OperationTypeEnum operationType;
 
     @JsonProperty("category")
     private String category;

@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.core.annotation.Order;
-import ru.homebuh.core.domain.enums.OperationType;
+import ru.homebuh.core.domain.enums.OperationTypeEnum;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -42,7 +42,7 @@ public class OperationEntity {
     @Column(name = "operation_type", nullable = false)
     @Enumerated(EnumType.ORDINAL)
     @JsonProperty("operationType")
-    private OperationType operationType;
+    private OperationTypeEnum operationType;
 
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)

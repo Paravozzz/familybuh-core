@@ -1,6 +1,6 @@
 package ru.homebuh.core.domain.enums;
 
-public enum OperationType {
+public enum OperationTypeEnum {
     /**
      * Расход
      */
