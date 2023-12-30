@@ -18,6 +18,7 @@ import java.util.List;
 public class CurrencyService {
     private final CurrencyRepository currencyRepository;
     private final UserInfoService userInfoService;
+    private final AccountService accountService;
 
     public List<CurrencyEntity> findAllByUserId(String id) {
         return currencyRepository.findAllByUserId(id);
@@ -33,12 +34,16 @@ public class CurrencyService {
 
         CurrencyEntity currencyEntity = currencyRepository.findByCodeIgnoreCase(currencyCode)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
+                        HttpStatus.UNPROCESSABLE_ENTITY,
                         MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.CURRENCY, "code", currencyCode)));
 
         if (!userInfoEntity.getCurrencies().contains(currencyEntity)) {
             userInfoEntity.getCurrencies().add(currencyEntity);
             userInfoService.save(userInfoEntity);
+
+            //При создании новой валюты необходимо создать счета для этой валюты
+            accountService.createUserAccountsWithCurrency(userInfoEntity, currencyEntity);
+
         }
 
         return currencyEntity;
@@ -50,7 +55,7 @@ public class CurrencyService {
 
         CurrencyEntity currencyEntity = currencyRepository.findByCodeIgnoreCase(currencyCode)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
+                        HttpStatus.UNPROCESSABLE_ENTITY,
                         MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.CURRENCY, "code", currencyCode)));
 
         throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, currencyEntity.toString());
