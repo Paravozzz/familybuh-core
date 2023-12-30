@@ -34,9 +34,6 @@ public class OperationDto {
     @JsonProperty("category")
     private String category;
 
-    @JsonProperty("categoryUuid")
-    private UUID categoryUuid;
-
     @JsonProperty("description")
     private String description;
 
