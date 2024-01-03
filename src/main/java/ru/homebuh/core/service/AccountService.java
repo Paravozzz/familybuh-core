@@ -6,15 +6,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ru.homebuh.core.controller.dto.AccountCreate;
+import ru.homebuh.core.controller.dto.AccountSummary;
 import ru.homebuh.core.domain.AccountEntity;
 import ru.homebuh.core.domain.CurrencyEntity;
 import ru.homebuh.core.domain.UserInfoEntity;
 import ru.homebuh.core.mapper.AccountMapper;
 import ru.homebuh.core.repository.AccountRepository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,13 +31,28 @@ public class AccountService {
     /**
      * Найти все счета пользователя
      *
-     * @param id идентификатор пользователя
-     * @return список обычных счетов
+     * @param userId идентификатор пользователя
+     * @return список счетов
      */
-    public List<AccountEntity> findAllByUserIdIgnoreCase(String id) {
-        return accountRepository.findAllByUserIdIgnoreCase(id);
+    public List<AccountEntity> findAllByUserIdIgnoreCase(String userId) {
+        return accountRepository.findAllByUserIdIgnoreCase(userId);
     }
 
+    /**
+     * Найти все счёта пользователя и обобщить данные по ним
+     *
+     * @param userId идентификатор пользователя
+     * @return список счетов
+     */
+    public Collection<AccountSummary> findAllSummaries(String userId) {
+        return accountRepository.findAllByUserIdIgnoreCase(userId).stream()
+                .collect(Collectors.groupingBy(AccountEntity::getName))
+                .values().stream()
+                .filter(Objects::nonNull)
+                .map(accountMapper::mapToSummary)
+                .filter(Objects::nonNull)
+                .toList();
+    }
 
     /**
      * Получить счет пользователя
@@ -46,7 +60,7 @@ public class AccountService {
      * @param userId       идентификатор пользователя
      * @param accountId    идентификатор счёта
      * @param currencyCode буквенный код валюты счёта
-     * @return обычный счет
+     * @return счет
      * @throws ResponseStatusException если счёт не найден
      */
     public AccountEntity getUserAccount(String userId, Long accountId, String currencyCode) {

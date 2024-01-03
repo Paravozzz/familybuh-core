@@ -5,6 +5,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.homebuh.core.controller.dto.AccountSummary;
 import ru.homebuh.core.domain.AccountEntity;
 import ru.homebuh.core.service.AccountService;
 
@@ -20,6 +21,11 @@ public class AccountController {
     @GetMapping("user/accounts")
     Collection<AccountEntity> getAll(final JwtAuthenticationToken token) {
         return accountService.findAllByUserIdIgnoreCase(token.getName());
+    }
+
+    @GetMapping("user/account-summaries")
+    Collection<AccountSummary> getAllSummaries(final JwtAuthenticationToken token) {
+        return accountService.findAllSummaries(token.getName());
     }
 
 }
