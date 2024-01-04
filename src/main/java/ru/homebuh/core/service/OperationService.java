@@ -41,9 +41,7 @@ public class OperationService {
     @Transactional
     public OperationDto expenseCreate(String userId, OperationCreate operationCreate) {
         userInfoService.isUserExists(userId);
-        final String currencyCode = operationCreate.getCurrencyCode();
-        currencyService.isCurrencyExists(currencyCode);
-        AccountEntity userAccount = accountService.getUserAccount(userId, operationCreate.getAccountId(), currencyCode);
+        AccountEntity userAccount = accountService.getUserAccount(userId, operationCreate.getAccountId());
         final Long categoryId = operationCreate.getCategoryId();
         CategoryEntity category = categoryService.findUserCategoryById(userId, categoryId);
         if (category.isIncome()) {
@@ -72,9 +70,7 @@ public class OperationService {
     @Transactional
     public OperationDto incomeCreate(String userId, OperationCreate operationCreate) {
         userInfoService.isUserExists(userId);
-        final String currencyCode = operationCreate.getCurrencyCode();
-        currencyService.isCurrencyExists(currencyCode);
-        AccountEntity userAccount = accountService.getUserAccount(userId, operationCreate.getAccountId(), currencyCode);
+        AccountEntity userAccount = accountService.getUserAccount(userId, operationCreate.getAccountId());
         final Long categoryId = operationCreate.getCategoryId();
         CategoryEntity category = categoryService.findUserCategoryById(userId, categoryId);
         if (!category.isIncome()) {

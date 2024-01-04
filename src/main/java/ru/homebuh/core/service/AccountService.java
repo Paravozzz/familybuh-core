@@ -57,17 +57,16 @@ public class AccountService {
     /**
      * Получить счет пользователя
      *
-     * @param userId       идентификатор пользователя
-     * @param accountId    идентификатор счёта
-     * @param currencyCode буквенный код валюты счёта
+     * @param userId    идентификатор пользователя
+     * @param accountId идентификатор счёта
      * @return счет
      * @throws ResponseStatusException если счёт не найден
      */
-    public AccountEntity getUserAccount(String userId, Long accountId, String currencyCode) {
-        return accountRepository.findAccount(userId, accountId, currencyCode)
+    public AccountEntity getUserAccount(String userId, Long accountId) {
+        return accountRepository.findAccount(userId, accountId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Account not found by accountId(" + accountId + ") and currencyCode(" + currencyCode + ")"));
+                        "Account not found by accountId(" + accountId + ")"));
     }
 
     /**
@@ -91,5 +90,17 @@ public class AccountService {
             newAccounts.add(account);
         });
         accountRepository.saveAll(newAccounts);
+    }
+
+    /**
+     * @param userId    идентификатор пользователя
+     * @param accountId идентификатор счёта
+     * @return обобщённая информация о счёте
+     */
+    public AccountSummary findUserAccountSummaryByAccountId(String userId, Long accountId) {
+        AccountEntity account = this.getUserAccount(userId, accountId);
+        String accountName = account.getName();
+        Collection<AccountEntity> accounts = accountRepository.findAccounts(userId, accountName);
+        return accountMapper.mapToSummary(accounts);
     }
 }
