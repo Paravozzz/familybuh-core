@@ -40,4 +40,15 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     @Query("select account from AccountEntity account where lower(account.userInfo.id) = lower(?1) " +
             "and account.name = ?2")
     Collection<AccountEntity> findAccounts(String userId, String accountName);
+
+    /**
+     * Найти счета по их идентификаторам
+     *
+     * @param userId     идентификатор пользователя
+     * @param accountIds идентификаторы счетов
+     * @return
+     */
+    @Query("select account from AccountEntity account where lower(account.userInfo.id) = lower(?1) " +
+            "and account.id in ?2")
+    Collection<AccountEntity> findAccounts(String userId, Collection<Long> accountIds);
 }

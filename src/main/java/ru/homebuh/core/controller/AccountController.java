@@ -2,11 +2,10 @@ package ru.homebuh.core.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import ru.homebuh.core.controller.dto.AccountCreate;
 import ru.homebuh.core.controller.dto.AccountSummary;
+import ru.homebuh.core.controller.dto.AccountUpdate;
 import ru.homebuh.core.domain.AccountEntity;
 import ru.homebuh.core.service.AccountService;
 
@@ -22,6 +21,20 @@ public class AccountController {
     @GetMapping("user/accounts")
     Collection<AccountEntity> getAll(final JwtAuthenticationToken token) {
         return accountService.findAllByUserIdIgnoreCase(token.getName());
+    }
+
+    @PostMapping("user/account")
+    AccountSummary create(
+            final JwtAuthenticationToken token,
+            @RequestBody AccountCreate accountCreate) {
+        return accountService.create(token.getName(), accountCreate);
+    }
+
+    @PutMapping("user/account")
+    AccountSummary update(
+            final JwtAuthenticationToken token,
+            @RequestBody AccountUpdate accountUpdate) {
+        return accountService.update(token.getName(), accountUpdate);
     }
 
     /**

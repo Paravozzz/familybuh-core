@@ -3,10 +3,7 @@ package ru.homebuh.core.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.homebuh.core.controller.dto.AccountCreate;
-import ru.homebuh.core.controller.dto.CategoryCreate;
-import ru.homebuh.core.controller.dto.InitCreate;
-import ru.homebuh.core.controller.dto.UserInfoCreate;
+import ru.homebuh.core.controller.dto.*;
 import ru.homebuh.core.domain.AccountEntity;
 import ru.homebuh.core.domain.CategoryEntity;
 import ru.homebuh.core.domain.CurrencyEntity;
@@ -14,6 +11,7 @@ import ru.homebuh.core.domain.UserInfoEntity;
 import ru.homebuh.core.repository.UserInfoRepository;
 import ru.homebuh.core.util.Constants;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -79,14 +77,18 @@ public class InitService {
         List<AccountEntity> userAccounts = accountService.findAllByUserIdIgnoreCase(userId);
         if (userAccounts.isEmpty()) {
             Constants.INITIAL_ACCOUNTS.forEach(accountName -> {
+                Collection<AccountBalanceCreate> balances = new ArrayList<>(1);
+                AccountBalanceCreate balance = new AccountBalanceCreate();
+                balance.setAmount("0");
+                balance.setCurrencyCode(initCurrencyCode);
+                balances.add(balance);
                 AccountCreate accountCreate = AccountCreate.builder()
-                        .userInfoId(userId)
-                        .currencyCode(initCurrencyCode)
                         .name(accountName)
                         .description("")
+                        .initialBalance(balances)
                         .build();
 
-                accountService.createAccount(accountCreate);
+                accountService.create(userId, accountCreate);
             });
         }
 

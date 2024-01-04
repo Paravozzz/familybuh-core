@@ -10,7 +10,7 @@ import java.util.Collection;
 @Getter
 @Setter
 @Builder
-public class AccountCreate {
+public class AccountUpdate {
 
     @JsonProperty("name")
     private String name;
@@ -19,6 +19,6 @@ public class AccountCreate {
     private String description;
 
     @JsonProperty("initialBalance")
-    private Collection<AccountBalanceCreate> initialBalance;
+    private Collection<AccountBalanceUpdate> initialBalance;
 
 }
