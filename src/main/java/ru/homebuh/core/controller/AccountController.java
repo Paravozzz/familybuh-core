@@ -7,7 +7,7 @@ import ru.homebuh.core.controller.dto.AccountCreate;
 import ru.homebuh.core.controller.dto.AccountSummary;
 import ru.homebuh.core.controller.dto.AccountUpdate;
 import ru.homebuh.core.domain.AccountEntity;
-import ru.homebuh.core.service.AccountService;
+import ru.homebuh.core.service.ControllerServiceFacade;
 
 import java.util.Collection;
 
@@ -16,25 +16,24 @@ import java.util.Collection;
 @RequestMapping("api")
 public class AccountController {
 
-    private final AccountService accountService;
-
+    private final ControllerServiceFacade controllerServiceFacade;
     @GetMapping("user/accounts")
     Collection<AccountEntity> getAll(final JwtAuthenticationToken token) {
-        return accountService.findAllByUserIdIgnoreCase(token.getName());
+        return controllerServiceFacade.findAllFamilyAccountsByUserId(token.getName());
     }
 
     @PostMapping("user/account")
     AccountSummary create(
             final JwtAuthenticationToken token,
             @RequestBody AccountCreate accountCreate) {
-        return accountService.create(token.getName(), accountCreate);
+        return controllerServiceFacade.createAccount(token.getName(), accountCreate);
     }
 
     @PutMapping("user/account")
     AccountSummary update(
             final JwtAuthenticationToken token,
             @RequestBody AccountUpdate accountUpdate) {
-        return accountService.update(token.getName(), accountUpdate);
+        return controllerServiceFacade.updateAccount(token.getName(), accountUpdate);
     }
 
     /**
@@ -45,7 +44,7 @@ public class AccountController {
      */
     @GetMapping("user/account-summaries")
     Collection<AccountSummary> getAllSummaries(final JwtAuthenticationToken token) {
-        return accountService.findAllSummaries(token.getName());
+        return controllerServiceFacade.findAllAccountsSummaries(token.getName());
     }
 
     /**
@@ -57,7 +56,7 @@ public class AccountController {
      */
     @GetMapping("user/account-summary/{accountId}")
     AccountSummary findUserAccountSummaryByAccountId(final JwtAuthenticationToken token, @PathVariable Long accountId) {
-        return accountService.findUserAccountSummaryByAccountId(token.getName(), accountId);
+        return controllerServiceFacade.findUserAccountSummaryByAccountId(token.getName(), accountId);
     }
 
 }

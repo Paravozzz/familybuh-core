@@ -1,0 +1,30 @@
+realm_name: familybuh
+
+server:
+  port: 8081
+
+spring:
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-master.xml
+    enabled: true
+  jpa:
+    show-sql: true
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/familybuh
+#    username: postgres
+#    password: pgpassword
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8083/realms/${realm_name}
+          jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs

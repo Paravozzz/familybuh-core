@@ -6,7 +6,6 @@ import ru.homebuh.core.domain.AccountEntity;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
 
@@ -20,15 +19,13 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     List<AccountEntity> findAllByUserIdIgnoreCase(String userId);
 
     /**
-     * Найти счет пользователя
+     * Найти все счета пользователей
      *
-     * @param userId    идентификатор пользователя
-     * @param accountId идентификатор счёта
-     * @return счет
+     * @param userIds идентификаторы пользователя
+     * @return список счетов
      */
-    @Query("select account from AccountEntity account where lower(account.userInfo.id) = lower(?1) " +
-            "and account.id = ?2")
-    Optional<AccountEntity> findAccount(String userId, Long accountId);
+    @Query("select account from AccountEntity account where lower(account.userInfo.id) in ?1")
+    List<AccountEntity> findAllByUserIdIgnoreCase(Collection<String> userIds);
 
     /**
      * Найти счета пользователя по имени счёта
@@ -37,18 +34,27 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
      * @param accountName имя счёта
      * @return счёт
      */
-    @Query("select account from AccountEntity account where lower(account.userInfo.id) = lower(?1) " +
+    @Query("select account from AccountEntity account where lower(account.userInfo.id) = ?1 " +
             "and account.name = ?2")
-    Collection<AccountEntity> findAccounts(String userId, String accountName);
+    List<AccountEntity> findAccountsByName(String userId, String accountName);
+
+    /**
+     * Найти счета пользователей по имени счёта
+     *
+     * @param userIds      идентификаторы пользователей
+     * @param accountName имя счёта
+     * @return счёт
+     */
+    @Query("select account from AccountEntity account where lower(account.userInfo.id) in ?1 " +
+            "and account.name = ?2")
+    List<AccountEntity> findAccountsByName(Collection<String> userIds, String accountName);
 
     /**
      * Найти счета по их идентификаторам
      *
-     * @param userId     идентификатор пользователя
      * @param accountIds идентификаторы счетов
      * @return
      */
-    @Query("select account from AccountEntity account where lower(account.userInfo.id) = lower(?1) " +
-            "and account.id in ?2")
-    Collection<AccountEntity> findAccounts(String userId, Collection<Long> accountIds);
+    @Query("select account from AccountEntity account where account.id in ?1")
+    List<AccountEntity> findAccounts(Collection<Long> accountIds);
 }

@@ -1,6 +1,8 @@
 package ru.homebuh.core.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,10 @@ public class CurrencyService {
     private final CurrencyRepository currencyRepository;
     private final UserInfoService userInfoService;
     private final AccountService accountService;
+
+    @Lazy
+    @Autowired
+    private CurrencyService self;
 
     public List<CurrencyEntity> findAllByUserId(String id) {
         return currencyRepository.findAllByUserId(id);
@@ -68,20 +74,10 @@ public class CurrencyService {
      * @return валюта
      * @throws ResponseStatusException если валюта не найдена в справочнике валют
      */
-    public CurrencyEntity findByCode(String currencyCode) {
+    public CurrencyEntity getByCode(String currencyCode) {
         return currencyRepository.findByCodeIgnoreCase(currencyCode)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.CURRENCY, "code", currencyCode)));
-    }
-
-    /**
-     * Проверяет наличие валюты с кодом в справочнике валют
-     *
-     * @param currencyCode буквенный код
-     * @throws ResponseStatusException если валюта не найдена в справочнике валют
-     */
-    public void isCurrencyExists(String currencyCode) {
-        findByCode(currencyCode);
     }
 }

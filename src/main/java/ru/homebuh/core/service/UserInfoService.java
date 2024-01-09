@@ -1,6 +1,8 @@
 package ru.homebuh.core.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,12 +14,18 @@ import ru.homebuh.core.repository.UserInfoRepository;
 import ru.homebuh.core.util.Constants;
 
 import java.text.MessageFormat;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserInfoService {
     private final UserInfoRepository userInfoRepository;
     private final UserInfoMapper mapper;
+
+    @Lazy
+    @Autowired
+    private UserInfoService self;
 
     public void isUserExists(String id) {
         findByIdIgnoreCase(id);
@@ -40,4 +48,16 @@ public class UserInfoService {
         userInfoRepository.save(userInfoEntity);
     }
 
+    public List<UserInfoEntity> findAllFamilyMembers(UserInfoEntity userInfo) {
+        if (userInfo.getFamily() == null) {
+            return Collections.singletonList(userInfo);
+        } else {
+            return userInfoRepository.findAllFamilyMembers(userInfo.getFamily());
+        }
+    }
+
+    public List<UserInfoEntity> findAllFamilyMembers(String userId) {
+        UserInfoEntity userInfo = self.findByIdIgnoreCase(userId);
+        return self.findAllFamilyMembers(userInfo);
+    }
 }

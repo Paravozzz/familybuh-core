@@ -25,7 +25,7 @@ public class UserInfoEntity {
     @JsonProperty("id")
     private String id;
 
-    @ManyToMany(cascade = {CascadeType.ALL})
+    @ManyToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_info_currency",
             joinColumns = {@JoinColumn(name = "user_info_id")},
@@ -34,7 +34,7 @@ public class UserInfoEntity {
     @JsonIgnore
     private List<CurrencyEntity> currencies = new ArrayList<>(0);
 
-    @ManyToMany(cascade = {CascadeType.ALL})
+    @ManyToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_info_category",
             joinColumns = {@JoinColumn(name = "user_info_id")},
@@ -43,7 +43,7 @@ public class UserInfoEntity {
     @JsonIgnore
     private List<CategoryEntity> categories = new ArrayList<>(0);
 
-    @ManyToMany(cascade = {CascadeType.ALL})
+    @ManyToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_info_setting",
             joinColumns = {@JoinColumn(name = "user_info_id")},
@@ -51,4 +51,9 @@ public class UserInfoEntity {
     )
     @JsonIgnore
     private List<SettingEntity> settings = new ArrayList<>(0);
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "family_id", nullable = true)
+    @JsonIgnore
+    private FamilyEntity family;
 }

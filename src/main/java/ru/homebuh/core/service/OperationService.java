@@ -25,7 +25,6 @@ import java.util.List;
 public class OperationService {
 
     private final UserInfoService userInfoService;
-    private final CurrencyService currencyService;
     private final AccountService accountService;
     private final CategoryService categoryService;
     private final OperationRepository operationRepository;
@@ -41,9 +40,9 @@ public class OperationService {
     @Transactional
     public OperationDto expenseCreate(String userId, OperationCreate operationCreate) {
         userInfoService.isUserExists(userId);
-        AccountEntity userAccount = accountService.getUserAccount(userId, operationCreate.getAccountId());
+        AccountEntity userAccount = accountService.getAccount(operationCreate.getAccountId());
         final Long categoryId = operationCreate.getCategoryId();
-        CategoryEntity category = categoryService.findUserCategoryById(userId, categoryId);
+        CategoryEntity category = categoryService.getCategory(categoryId);
         if (category.isIncome()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Category with id(" + categoryId + ") is not expense type.");
         }
@@ -70,9 +69,9 @@ public class OperationService {
     @Transactional
     public OperationDto incomeCreate(String userId, OperationCreate operationCreate) {
         userInfoService.isUserExists(userId);
-        AccountEntity userAccount = accountService.getUserAccount(userId, operationCreate.getAccountId());
+        AccountEntity userAccount = accountService.getAccount(operationCreate.getAccountId());
         final Long categoryId = operationCreate.getCategoryId();
-        CategoryEntity category = categoryService.findUserCategoryById(userId, categoryId);
+        CategoryEntity category = categoryService.getCategory(categoryId);
         if (!category.isIncome()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Category with id(" + categoryId + ") is not income type.");
         }
@@ -109,7 +108,7 @@ public class OperationService {
         booleanBuilder.and(QOperationEntity.operationEntity.category.in(userCategories));
 
         //Только принадлежащие пользователю счета
-        List<AccountEntity> userAccounts = accountService.findAllByUserIdIgnoreCase(userId);
+        List<AccountEntity> userAccounts = accountService.findAllAccountsByUserId(userId);
         booleanBuilder.and(QOperationEntity.operationEntity.account.in(userAccounts));
 
         Iterable<OperationEntity> result = operationRepository.findAll(booleanBuilder);
@@ -136,7 +135,7 @@ public class OperationService {
         booleanBuilder.and(QOperationEntity.operationEntity.category.in(userCategories));
 
         //Только принадлежащие пользователю счета
-        List<AccountEntity> userAccounts = accountService.findAllByUserIdIgnoreCase(userId);
+        List<AccountEntity> userAccounts = accountService.findAllAccountsByUserId(userId);
         booleanBuilder.and(QOperationEntity.operationEntity.account.in(userAccounts));
 
         booleanBuilder.and(QOperationEntity.operationEntity.operationType.eq(operationType));

@@ -15,7 +15,6 @@ import ru.homebuh.core.util.Constants;
 
 import java.text.MessageFormat;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -57,16 +56,12 @@ public class CategoryService {
     /**
      * Найти категорию принадлежащую пользователю
      *
-     * @param userInfoId идентификатор пользователя
      * @param categoryId идентификатор категории
      * @return искомая категория
      * @throws ResponseStatusException если категория или пользователь не найдены
      */
-    public CategoryEntity findUserCategoryById(String userInfoId, Long categoryId) {
-        List<CategoryEntity> usersCategories = categoryRepository.findAllByUserId(userInfoId);
-        return usersCategories.stream()
-                .filter(categoryEntity -> Objects.equals(categoryEntity.getId(), categoryId))
-                .findFirst()
+    public CategoryEntity getCategory(Long categoryId) {
+        return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.CATEGORY, "id", categoryId)));
@@ -98,21 +93,14 @@ public class CategoryService {
     /**
      * Обновить категорию у определённого пользователя
      *
-     * @param userInfoId     идентификатор пользователя
      * @param categoryId     идентификатор обновляемой категории
      * @param categoryUpdate данные для обновления категории
      * @return обновлённая категория
      */
     @Transactional
-    public CategoryEntity update(String userInfoId, Long categoryId, CategoryUpdate categoryUpdate) {
-        UserInfoEntity userInfo = userInfoService.findByIdIgnoreCase(userInfoId);
+    public CategoryEntity update(Long categoryId, CategoryUpdate categoryUpdate) {
 
-        List<CategoryEntity> categories = userInfo.getCategories();
-        if (categories.stream().noneMatch(c -> Objects.equals(c.getId(), categoryId))) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
-                    MessageFormat.format(Constants.DUPLICATE_BY_PARAM_TEMPLATE, Constants.CATEGORY, "id", categoryId));
-        }
+        //TODO: Проверить что у пользователя или семьи нет категории с таким же именем
         return categoryRepository.save(categoryMapper.map(categoryId, categoryUpdate));
     }
 }

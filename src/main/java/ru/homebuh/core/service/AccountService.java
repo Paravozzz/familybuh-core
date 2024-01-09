@@ -1,14 +1,13 @@
 package ru.homebuh.core.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import ru.homebuh.core.controller.dto.AccountBalanceUpdate;
-import ru.homebuh.core.controller.dto.AccountCreate;
-import ru.homebuh.core.controller.dto.AccountSummary;
-import ru.homebuh.core.controller.dto.AccountUpdate;
+import ru.homebuh.core.controller.dto.*;
 import ru.homebuh.core.domain.AccountEntity;
 import ru.homebuh.core.domain.CurrencyEntity;
 import ru.homebuh.core.domain.UserInfoEntity;
@@ -23,8 +22,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AccountService {
 
+    private final UserInfoService userInfoService;
     private final AccountRepository accountRepository;
+    @Lazy
+    @Autowired
+    private CurrencyService currencyService;
     private final AccountMapper accountMapper;
+    @Lazy
+    @Autowired
+    private AccountService self;
 
     /**
      * Найти все счета пользователя
@@ -32,18 +38,30 @@ public class AccountService {
      * @param userId идентификатор пользователя
      * @return список счетов
      */
-    public List<AccountEntity> findAllByUserIdIgnoreCase(String userId) {
+    public List<AccountEntity> findAllAccountsByUserId(String userId) {
         return accountRepository.findAllByUserIdIgnoreCase(userId);
     }
 
     /**
-     * Найти все счёта пользователя и обобщить данные по ним
+     * Найти все счета семьи
      *
      * @param userId идентификатор пользователя
      * @return список счетов
      */
-    public Collection<AccountSummary> findAllSummaries(String userId) {
-        return accountRepository.findAllByUserIdIgnoreCase(userId).stream()
+    public List<AccountEntity> findAllFamilyAccountsByUserId(String userId) {
+        List<UserInfoEntity> familyMembers = userInfoService.findAllFamilyMembers(userId);
+        Set<String> familyMembersId = familyMembers.stream().map(UserInfoEntity::getId).collect(Collectors.toSet());
+        return accountRepository.findAllByUserIdIgnoreCase(familyMembersId);
+    }
+
+    /**
+     * Найти все счета пользователя и обобщить данные по ним
+     *
+     * @param userId идентификатор пользователя
+     * @return список счетов
+     */
+    public Collection<AccountSummary> findAllAccountsSummaries(String userId) {
+        return self.findAllAccountsByUserId(userId).stream()
                 .collect(Collectors.groupingBy(AccountEntity::getName))
                 .values().stream()
                 .filter(Objects::nonNull)
@@ -55,13 +73,12 @@ public class AccountService {
     /**
      * Получить счет пользователя
      *
-     * @param userId    идентификатор пользователя
      * @param accountId идентификатор счёта
      * @return счет
      * @throws ResponseStatusException если счёт не найден
      */
-    public AccountEntity getUserAccount(String userId, Long accountId) {
-        return accountRepository.findAccount(userId, accountId)
+    public AccountEntity getAccount(Long accountId) {
+        return accountRepository.findById(accountId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Account not found by accountId(" + accountId + ")"));
@@ -91,15 +108,18 @@ public class AccountService {
     }
 
     /**
-     * @param userId    идентификатор пользователя
+     * Получить обобщённую информацию о счёте
+     *
      * @param accountId идентификатор счёта
      * @return обобщённая информация о счёте
      */
-    public AccountSummary findUserAccountSummaryByAccountId(String userId, Long accountId) {
-        AccountEntity account = this.getUserAccount(userId, accountId);
-        String accountName = account.getName();
-        Collection<AccountEntity> accounts = accountRepository.findAccounts(userId, accountName);
-        return accountMapper.mapToSummary(accounts);
+    public AccountSummary findAccountSummaryByAccountId(Long accountId) {
+        AccountEntity account = self.getAccount(accountId);
+        UserInfoEntity userInfo = account.getUserInfo();
+        String userId = userInfo.getId();
+        String name = account.getName();
+        Collection<AccountEntity> accountsByName = accountRepository.findAccountsByName(userId, name);
+        return accountMapper.mapToSummary(accountsByName);
     }
 
     /**
@@ -111,13 +131,18 @@ public class AccountService {
      */
     @Transactional
     public AccountSummary create(String userId, AccountCreate accountCreate) {
-        //Проверить, что у пользователя еще не существует счетов с таким именем
-        String name = accountCreate.getName() == null ? "" : accountCreate.getName();
-        Collection<AccountEntity> existentAccounts = accountRepository.findAccounts(userId, name);
-        if (!existentAccounts.isEmpty())
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Account with name \"" + name + "\" already exists.");
+        UserInfoEntity userInfo = userInfoService.findByIdIgnoreCase(userId);
 
-        Collection<AccountEntity> newAccounts = accountMapper.map(userId, accountCreate);
+        //Проверить, что у семьи не существует счетов с таким именем
+        List<UserInfoEntity> allFamilyMembers = userInfoService.findAllFamilyMembers(userId);
+        Set<String> familyMembersIds = allFamilyMembers.stream().map(UserInfoEntity::getId).collect(Collectors.toSet());
+        String name = accountCreate.getName() == null ? "" : accountCreate.getName();
+        List<AccountEntity> existentAccounts = accountRepository.findAccountsByName(familyMembersIds, name);
+        if (!existentAccounts.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Account with name \"" + name + "\" already exists.");
+        }
+
+        Collection<AccountEntity> newAccounts = self.createNewAccounts(userInfo, accountCreate);
         newAccounts = accountRepository.saveAll(newAccounts);
         return accountMapper.mapToSummary(newAccounts);
     }
@@ -126,24 +151,25 @@ public class AccountService {
     public AccountSummary update(String userId, AccountUpdate accountUpdate) {
         Collection<AccountBalanceUpdate> initialBalance =
                 accountUpdate.getInitialBalance() == null ? Collections.emptyList() : accountUpdate.getInitialBalance();
-        Map<Long, AccountBalanceUpdate> initialBalanceMap = initialBalance.stream().collect(Collectors.toMap(AccountBalanceUpdate::getAccountId, a -> a, (a, b) -> a));
+        Map<Long, AccountBalanceUpdate> initialBalanceMap = initialBalance.stream()
+                .collect(Collectors.toMap(AccountBalanceUpdate::getAccountId, a -> a, (a, b) -> a));
         Set<Long> accountIds = initialBalanceMap.keySet();
-        Collection<AccountEntity> accountsForUpdate = accountRepository.findAccounts(userId, accountIds);
+        List<AccountEntity> accountsForUpdate = accountRepository.findAccounts(accountIds);
 
         //Проверить, что у счетов одно имя
         Set<String> accountNames = accountsForUpdate.stream().map(AccountEntity::getName).collect(Collectors.toSet());
         if (accountNames.size() > 1)
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Account IDs do not belong to the same group.");
 
-        //Проверить, что у пользователя еще не существует счетов с таким именем
+        //Проверить, что у семьи не существует счетов с таким именем, кроме тех, которые хотим обновить
+        List<UserInfoEntity> allFamilyMembers = userInfoService.findAllFamilyMembers(userId);
+        Set<String> familyMembersIds = allFamilyMembers.stream().map(UserInfoEntity::getId).collect(Collectors.toSet());
         String name = accountUpdate.getName() == null ? "" : accountUpdate.getName();
-        Collection<AccountEntity> existentAccounts = accountRepository.findAccounts(userId, name);
-        if (!existentAccounts.isEmpty()) {
-            Set<Long> existentAccountIds = existentAccounts.stream().map(AccountEntity::getId).collect(Collectors.toSet());
-            existentAccountIds.removeAll(accountIds);
-            if (!existentAccountIds.isEmpty())
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Account with name \"" + name + "\" already exists.");
-        }
+        List<AccountEntity> existentAccounts = accountRepository.findAccountsByName(familyMembersIds, name).stream()
+                .filter(account -> !accountIds.contains(account.getId())) //Кроме счетов, которые хотим обновить.
+                .toList();
+        if (!existentAccounts.isEmpty())
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Account with name \"" + name + "\" already exists.");
 
         String description = accountUpdate.getDescription() == null ? "" : accountUpdate.getDescription();
         accountsForUpdate.forEach(accountEntity -> {
@@ -156,5 +182,29 @@ public class AccountService {
         });
         accountsForUpdate = accountRepository.saveAll(accountsForUpdate);
         return accountMapper.mapToSummary(accountsForUpdate);
+    }
+
+    private Collection<AccountEntity> createNewAccounts(UserInfoEntity userInfo, AccountCreate source) {
+        if (source == null)
+            return Collections.emptyList();
+
+        Collection<AccountBalanceCreate> balances = source.getInitialBalance();
+        if (balances == null || balances.isEmpty())
+            return Collections.emptyList();
+
+        String name = source.getName() == null ? "" : source.getName();
+        String description = source.getDescription() == null ? "" : source.getDescription();
+
+
+        return balances.stream().map(item -> {
+            AccountEntity account = new AccountEntity();
+            account.setName(name);
+            account.setDescription(description);
+            account.setUserInfo(userInfo);
+            account.setInitialBalance(new BigDecimal(item.getAmount()));
+            CurrencyEntity currency = currencyService.getByCode(item.getCurrencyCode());
+            account.setCurrency(currency);
+            return account;
+        }).toList();
     }
 }

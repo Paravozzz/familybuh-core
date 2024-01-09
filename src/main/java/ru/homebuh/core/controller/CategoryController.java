@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.homebuh.core.controller.dto.CategoryCreate;
 import ru.homebuh.core.controller.dto.CategoryUpdate;
 import ru.homebuh.core.domain.CategoryEntity;
-import ru.homebuh.core.service.CategoryService;
+import ru.homebuh.core.service.ControllerServiceFacade;
 
 import java.util.Collection;
 
@@ -15,26 +15,26 @@ import java.util.Collection;
 @RequestMapping("api")
 public class CategoryController {
 
-    private final CategoryService categoryService;
+    private final ControllerServiceFacade controllerServiceFacade;
 
     @GetMapping("user/categories")
     Collection<CategoryEntity> getAll(
             final JwtAuthenticationToken token) {
-        return categoryService.findAllByUserId(token.getName());
+        return controllerServiceFacade.findAllUserCategoriesByUserId(token.getName());
     }
 
     @GetMapping("user/category/{categoryId}")
     CategoryEntity findById(
             final JwtAuthenticationToken token,
             @PathVariable(value = "categoryId", required = true) Long categoryId) {
-        return categoryService.findUserCategoryById(token.getName(), categoryId);
+        return controllerServiceFacade.findUserCategoryById(token.getName(), categoryId);
     }
 
     @PostMapping("user/category")
     CategoryEntity create(
             final JwtAuthenticationToken token,
             @RequestBody CategoryCreate categoryCreate) {
-        return categoryService.create(token.getName(), categoryCreate);
+        return controllerServiceFacade.createCategory(token.getName(), categoryCreate);
     }
 
     @PutMapping("user/category/{categoryId}")
@@ -42,6 +42,6 @@ public class CategoryController {
             final JwtAuthenticationToken token,
             @PathVariable(value = "categoryId", required = true) Long categoryId,
             @RequestBody CategoryUpdate categoryUpdate) {
-        return categoryService.update(token.getName(), categoryId, categoryUpdate);
+        return controllerServiceFacade.updateCategory(token.getName(), categoryId, categoryUpdate);
     }
 }

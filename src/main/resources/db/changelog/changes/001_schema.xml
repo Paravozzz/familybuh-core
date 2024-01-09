@@ -9,9 +9,12 @@
     <property name="now" value="now()" dbms="postgresql"/>
 
     <changeSet id="001" author="admin" labels="schema">
-        <preConditions onFail="MARK_RAN">
+        <preConditions onFail="HALT">
             <not>
                 <tableExists tableName="currency"/>
+            </not>
+            <not>
+                <tableExists tableName="family"/>
             </not>
             <not>
                 <tableExists tableName="user_info"/>
@@ -28,10 +31,13 @@
             <not>
                 <tableExists tableName="operation"/>
             </not>
+        <not>
+                <tableExists tableName="setting"/>
+            </not>
         </preConditions>
         <createTable tableName="currency">
             <column name="id" type="varchar(3)">
-                <constraints primaryKey="true" nullable="false"/>
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_currency"/>
             </column>
             <column name="code" type="varchar(3)">
                 <constraints unique="true" nullable="false"/>
@@ -41,9 +47,19 @@
             </column>
         </createTable>
 
+        <createTable tableName="family">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_family"/>
+            </column>
+        </createTable>
+
         <createTable tableName="user_info">
             <column name="id" type="varchar(36)" autoIncrement="false">
-                <constraints primaryKey="true" nullable="false"/>
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_user_info"/>
+            </column>
+            <column name="family_id" type="bigint" autoIncrement="false">
+                <constraints foreignKeyName="fk_family" referencedTableName="family" referencedColumnNames="id"
+                             nullable="true"/>
             </column>
         </createTable>
 
@@ -62,7 +78,7 @@
 
         <createTable tableName="account">
             <column name="id" type="bigint" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_account"/>
             </column>
             <column name="name" type="varchar(255)">
                 <constraints nullable="false"/>
@@ -85,7 +101,7 @@
 
         <createTable tableName="category">
             <column name="id" type="bigint" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_category"/>
             </column>
             <column name="name" type="varchar(255)">
                 <constraints nullable="false"/>
@@ -97,7 +113,7 @@
 
         <createTable tableName="operation">
             <column name="id" type="bigint" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_operation"/>
             </column>
             <column name="amount" type="numeric(38, 2)">
                 <constraints nullable="false"/>
@@ -137,7 +153,7 @@
 
         <createTable tableName="setting">
             <column name="id" type="bigint" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_setting"/>
             </column>
             <column name="name" type="varchar(255)">
                 <constraints nullable="false"/>

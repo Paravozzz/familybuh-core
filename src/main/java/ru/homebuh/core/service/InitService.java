@@ -1,20 +1,21 @@
 package ru.homebuh.core.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import ru.homebuh.core.controller.dto.*;
 import ru.homebuh.core.domain.AccountEntity;
 import ru.homebuh.core.domain.CategoryEntity;
 import ru.homebuh.core.domain.CurrencyEntity;
 import ru.homebuh.core.domain.UserInfoEntity;
-import ru.homebuh.core.repository.UserInfoRepository;
 import ru.homebuh.core.util.Constants;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +25,6 @@ public class InitService {
     private final AccountService accountService;
     private final CurrencyService currencyService;
     private final CategoryService categoryService;
-    private final UserInfoRepository userInfoRepository;
 
     /**
      * Проверяет выполнена ли первоначальная настройка приложения для текущего пользователя
@@ -35,18 +35,23 @@ public class InitService {
     @Transactional
     public boolean isUserInit(String userId) {
         //1. Пользователь должен существовать
-        final Optional<UserInfoEntity> userInfoEntityOptional = userInfoRepository.findByIdIgnoreCase(userId);
-        if (userInfoEntityOptional.isEmpty())
-            return false;
+        final UserInfoEntity userInfoEntity;
+        try {
+            userInfoEntity = userInfoService.findByIdIgnoreCase(userId);
+        } catch (ResponseStatusException e) {
+            if (e.getStatusCode() == HttpStatusCode.valueOf(HttpStatus.NOT_FOUND.value()))
+                return false;
+            else
+                throw e;
+        }
 
         //2. У пользователя должна быть задана хотя бы одна валюта
-        final UserInfoEntity userInfoEntity = userInfoEntityOptional.get();
         Collection<CurrencyEntity> userCurrencies = userInfoEntity.getCurrencies();
         if (userCurrencies.isEmpty())
             return false;
 
         //3. У пользователя должен быть создан хотя бы один счёт
-        if (accountService.findAllByUserIdIgnoreCase(userId).isEmpty())
+        if (accountService.findAllAccountsByUserId(userId).isEmpty())
             return false;
 
         //4. У пользователя должна быть хотя бы одна расходная категория
@@ -60,12 +65,19 @@ public class InitService {
     @Transactional
     public void initUser(String userId, InitCreate initCreate) {
         //1. Пользователь должен существовать
-        final Optional<UserInfoEntity> optionalUserInfo = userInfoRepository.findByIdIgnoreCase(userId);
-        final UserInfoEntity userInfoEntity = optionalUserInfo.orElseGet(() -> userInfoService.create(new UserInfoCreate(userId)));
+        UserInfoEntity userInfoEntity;
+        try {
+            userInfoEntity = userInfoService.findByIdIgnoreCase(userId);
+        } catch (ResponseStatusException e) {
+            if (e.getStatusCode() == HttpStatusCode.valueOf(HttpStatus.NOT_FOUND.value()))
+                userInfoEntity = userInfoService.create(new UserInfoCreate(userId));
+            else
+                throw e;
+        }
 
         //2. У пользователя должна быть задана хотя бы одна валюта
         final String initCurrencyCode = initCreate.getCurrencyCode();
-        CurrencyEntity initCurrency = currencyService.findByCode(initCurrencyCode);
+        CurrencyEntity initCurrency = currencyService.getByCode(initCurrencyCode);
 
         List<CurrencyEntity> userCurrencies = userInfoEntity.getCurrencies();
         if (userCurrencies.isEmpty() || !userCurrencies.contains(initCurrency)) {
@@ -74,7 +86,7 @@ public class InitService {
         }
 
         //3. У пользователя должен быть создан хотя бы один счёт
-        List<AccountEntity> userAccounts = accountService.findAllByUserIdIgnoreCase(userId);
+        List<AccountEntity> userAccounts = accountService.findAllAccountsByUserId(userId);
         if (userAccounts.isEmpty()) {
             Constants.INITIAL_ACCOUNTS.forEach(accountName -> {
                 Collection<AccountBalanceCreate> balances = new ArrayList<>(1);

@@ -7,14 +7,14 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import ru.homebuh.core.controller.dto.InitCreate;
-import ru.homebuh.core.service.InitService;
+import ru.homebuh.core.service.ControllerServiceFacade;
 
 @RequiredArgsConstructor
 @Controller
 @RequestMapping("api")
 public class InitController {
 
-    private final InitService initService;
+    private final ControllerServiceFacade controllerServiceFacade;
 
     /**
      * Проверяет, все ли начальные параметры заданы для текущего пользователя
@@ -22,7 +22,7 @@ public class InitController {
      */
     @GetMapping("init")
     public ResponseEntity<Boolean> isUserInit(final JwtAuthenticationToken token) {
-        return new ResponseEntity<>(initService.isUserInit(token.getName()), HttpStatus.OK);
+        return new ResponseEntity<>(controllerServiceFacade.isUserInit(token.getName()), HttpStatus.OK);
     }
 
     /**
@@ -33,6 +33,6 @@ public class InitController {
     @PostMapping("init")
     @ResponseStatus(HttpStatus.OK)
     public void initUser(final JwtAuthenticationToken token, @RequestBody InitCreate initCreate) {
-        this.initService.initUser(token.getName(), initCreate);
+        controllerServiceFacade.initUser(token.getName(), initCreate);
     }
 }
