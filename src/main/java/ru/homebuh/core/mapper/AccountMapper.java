@@ -25,7 +25,7 @@ public abstract class AccountMapper {
     protected CurrencyService currencyService;
 
     protected UserInfoEntity fetchUserInfo(String id) {
-        return userInfoRepository.findByIdIgnoreCase(id);
+        return userInfoRepository.getUserInfo(id);
     }
 
     protected CurrencyEntity fetchCurrency(String code) {

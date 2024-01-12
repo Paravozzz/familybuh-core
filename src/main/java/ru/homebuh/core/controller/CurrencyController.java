@@ -28,7 +28,8 @@ public class CurrencyController {
 
     @GetMapping("user/currencies")
     Collection<CurrencyEntity> getAll(final JwtAuthenticationToken token) {
-        return controllerServiceFacade.findAllCurrenciesByUserId(token.getName());
+        //TODO: при объединении пользователей необходимо синхрпнизировать валюты из создать недостающие счета для недостающих валют
+        return controllerServiceFacade.findAllFamilyCurrenciesByUserId(token.getName());
     }
 
     @PostMapping("user/currency/{currencyCode}")

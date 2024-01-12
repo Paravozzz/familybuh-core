@@ -20,7 +20,7 @@ public class CategoryController {
     @GetMapping("user/categories")
     Collection<CategoryEntity> getAll(
             final JwtAuthenticationToken token) {
-        return controllerServiceFacade.findAllUserCategoriesByUserId(token.getName());
+        return controllerServiceFacade.findAllFamilyCategoriesByUserId(token.getName());
     }
 
     @GetMapping("user/category/{categoryId}")

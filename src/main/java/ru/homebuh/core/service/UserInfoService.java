@@ -1,8 +1,6 @@
 package ru.homebuh.core.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +14,7 @@ import ru.homebuh.core.util.Constants;
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -23,12 +22,8 @@ public class UserInfoService {
     private final UserInfoRepository userInfoRepository;
     private final UserInfoMapper mapper;
 
-    @Lazy
-    @Autowired
-    private UserInfoService self;
-
     public void isUserExists(String id) {
-        findByIdIgnoreCase(id);
+        getUserInfo(id);
     }
 
     @Transactional
@@ -36,11 +31,15 @@ public class UserInfoService {
         return userInfoRepository.save(mapper.map(userInfoCreate));
     }
 
-    public UserInfoEntity findByIdIgnoreCase(String id) {
+    public UserInfoEntity getUserInfo(String id) {
         return userInfoRepository.findByIdIgnoreCase(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.USER, "id", id)));
+                .orElseThrow(notFoundByIdExceptionSupplier(id));
+    }
+
+    public static Supplier<ResponseStatusException> notFoundByIdExceptionSupplier(String id) {
+        return () -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                MessageFormat.format(Constants.NOT_FOUND_BY_PARAM_TEMPLATE, Constants.USER, "id", id));
     }
 
     @Transactional
@@ -48,16 +47,14 @@ public class UserInfoService {
         userInfoRepository.save(userInfoEntity);
     }
 
-    public List<UserInfoEntity> findAllFamilyMembers(UserInfoEntity userInfo) {
+
+    public List<UserInfoEntity> findAllFamilyMembers(String userId) {
+        UserInfoEntity userInfo = userInfoRepository.findByIdIgnoreCase(userId)
+                .orElseThrow(notFoundByIdExceptionSupplier(userId));
         if (userInfo.getFamily() == null) {
             return Collections.singletonList(userInfo);
         } else {
             return userInfoRepository.findAllFamilyMembers(userInfo.getFamily());
         }
-    }
-
-    public List<UserInfoEntity> findAllFamilyMembers(String userId) {
-        UserInfoEntity userInfo = self.findByIdIgnoreCase(userId);
-        return self.findAllFamilyMembers(userInfo);
     }
 }

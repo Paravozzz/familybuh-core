@@ -41,7 +41,7 @@ public class SettingService {
     @Transactional
     public SettingDto save(String userInfoId, SettingCreate settingCreate) {
         SettingEntity newSetting = settingMapper.map(settingCreate);
-        UserInfoEntity userInfo = userInfoService.findByIdIgnoreCase(userInfoId);
+        UserInfoEntity userInfo = userInfoService.getUserInfo(userInfoId);
 
         List<SettingEntity> settings = userInfo.getSettings();
         final String name = newSetting.getName();

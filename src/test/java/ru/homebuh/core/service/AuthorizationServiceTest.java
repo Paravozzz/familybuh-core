@@ -57,7 +57,7 @@ class AuthorizationServiceTest {
         assertNotNull(user1);
         assertNotNull(account1);
         assertDoesNotThrow(() -> {
-            authorizationService.isAuthorized(userId1, account1.getId());
+            authorizationService.account(userId1, account1.getId());
         });
     }
 
@@ -90,7 +90,7 @@ class AuthorizationServiceTest {
         assertNotNull(account1);
         assertNotNull(account2);
         assertDoesNotThrow(() -> {
-            authorizationService.isAuthorized(userId1, account2.getId());
+            authorizationService.account(userId1, account2.getId());
         });
     }
 
@@ -122,7 +122,7 @@ class AuthorizationServiceTest {
         assertNotNull(account1);
         assertNotNull(account2);
         assertThrows(ResponseStatusException.class, () -> {
-            authorizationService.isAuthorized(userId1, account2.getId());
+            authorizationService.account(userId1, account2.getId());
         });
     }
 
@@ -134,7 +134,7 @@ class AuthorizationServiceTest {
         //Act
         //Assert
         assertThrows(ResponseStatusException.class, () -> {
-            authorizationService.isAuthorized("", 0L);
+            authorizationService.account("", 0L);
         });
     }
 
@@ -147,7 +147,7 @@ class AuthorizationServiceTest {
         //Act
         //Assert
         assertThrows(ResponseStatusException.class, () -> {
-            authorizationService.isAuthorized(user1.getId(), 100L);
+            authorizationService.account(user1.getId(), 100L);
         });
     }
 
@@ -159,7 +159,7 @@ class AuthorizationServiceTest {
         //Act
         //Assert
         assertThrows(ResponseStatusException.class, () -> {
-            authorizationService.isAuthorized("user1", 1L);
+            authorizationService.account("user1", 1L);
         });
     }
 

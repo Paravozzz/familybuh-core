@@ -37,7 +37,7 @@ public class InitService {
         //1. Пользователь должен существовать
         final UserInfoEntity userInfoEntity;
         try {
-            userInfoEntity = userInfoService.findByIdIgnoreCase(userId);
+            userInfoEntity = userInfoService.getUserInfo(userId);
         } catch (ResponseStatusException e) {
             if (e.getStatusCode() == HttpStatusCode.valueOf(HttpStatus.NOT_FOUND.value()))
                 return false;
@@ -67,7 +67,7 @@ public class InitService {
         //1. Пользователь должен существовать
         UserInfoEntity userInfoEntity;
         try {
-            userInfoEntity = userInfoService.findByIdIgnoreCase(userId);
+            userInfoEntity = userInfoService.getUserInfo(userId);
         } catch (ResponseStatusException e) {
             if (e.getStatusCode() == HttpStatusCode.valueOf(HttpStatus.NOT_FOUND.value()))
                 userInfoEntity = userInfoService.create(new UserInfoCreate(userId));

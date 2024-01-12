@@ -177,7 +177,7 @@ class AccountServiceTest {
         AccountEntity account2 = createAccount(user1, accName, cur2);
 
         //Act
-        Collection<AccountSummary> summaries = accountService.findAllAccountsSummaries(userId1);
+        Collection<AccountSummary> summaries = accountService.findAllFamilyAccountsSummaries(userId1);
 
         //Assert
         assertNotNull(summaries);

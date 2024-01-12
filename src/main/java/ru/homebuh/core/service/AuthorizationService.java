@@ -1,12 +1,11 @@
 package ru.homebuh.core.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import ru.homebuh.core.domain.AccountEntity;
+import ru.homebuh.core.domain.CategoryEntity;
 import ru.homebuh.core.domain.UserInfoEntity;
 
 import java.util.List;
@@ -17,9 +16,8 @@ public class AuthorizationService {
 
     private final UserInfoService userInfoService;
     private final AccountService accountService;
-    @Lazy
-    @Autowired
-    private AuthorizationService self;
+    private final CategoryService categoryService;
+
 
     /**
      * Проверка что у пользователя или семьи есть права
@@ -28,7 +26,7 @@ public class AuthorizationService {
      * @param accountId
      * @throws ResponseStatusException если нет прав
      */
-    public void isAuthorized(String userId, Long accountId) {
+    public void account(String userId, Long accountId) {
         if (userId == null || accountId == null || userId.isBlank() || accountId < 1)
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 
@@ -47,26 +45,76 @@ public class AuthorizationService {
     }
 
     /**
+     * Проверка что у пользователя или семьи есть права
+     *
      * @param userId
      * @param account
      * @throws ResponseStatusException если нет прав
      */
-    public void isAuthorized(String userId, AccountEntity account) {
-        if (account == null)
+    public void account(String userId, AccountEntity account) {
+        if (userId == null || account == null)
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 
-        self.isAuthorized(userId, account.getId());
+        account(userId, account.getId());
     }
 
     /**
+     * Проверка что у пользователя или семьи есть права
+     *
      * @param userInfo
      * @param account
      * @throws ResponseStatusException если нет прав
      */
-    public void isAuthorized(UserInfoEntity userInfo, AccountEntity account) {
+    public void account(UserInfoEntity userInfo, AccountEntity account) {
         if (userInfo == null || account == null)
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 
-        self.isAuthorized(userInfo.getId(), account.getId());
+        account(userInfo.getId(), account.getId());
+    }
+
+    /**
+     * Проверка что у пользователя или семьи есть права
+     *
+     * @param userId
+     * @param categoryId
+     * @throws ResponseStatusException если нет прав
+     */
+    public void category(String userId, Long categoryId) {
+        if (userId == null || categoryId == null || userId.isBlank() || categoryId < 1)
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+
+        List<CategoryEntity> familyCategories = categoryService.findAllFamilyCategoriesByUserId(userId);
+        if (familyCategories.stream().anyMatch(category -> category.getId().equals(categoryId))) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+    }
+
+    /**
+     * Проверка что у пользователя или семьи есть права
+     *
+     * @param userId
+     * @param category
+     * @throws ResponseStatusException если нет прав
+     */
+    public void category(String userId, CategoryEntity category) {
+        if (userId == null || category == null)
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+
+        category(userId, category.getId());
+    }
+
+    /**
+     * Проверка что у пользователя или семьи есть права
+     *
+     * @param userInfo
+     * @param category
+     * @throws ResponseStatusException если нет прав
+     */
+    public void category(UserInfoEntity userInfo, CategoryEntity category) {
+        if (userInfo == null || category == null)
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+
+        category(userInfo.getId(), category.getId());
     }
 }

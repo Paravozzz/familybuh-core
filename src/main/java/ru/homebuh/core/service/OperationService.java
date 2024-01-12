@@ -9,7 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ru.homebuh.core.controller.dto.OperationCreate;
 import ru.homebuh.core.controller.dto.OperationDto;
-import ru.homebuh.core.domain.*;
+import ru.homebuh.core.domain.AccountEntity;
+import ru.homebuh.core.domain.CategoryEntity;
+import ru.homebuh.core.domain.OperationEntity;
+import ru.homebuh.core.domain.QOperationEntity;
 import ru.homebuh.core.domain.enums.OperationTypeEnum;
 import ru.homebuh.core.mapper.OperationMapper;
 import ru.homebuh.core.repository.OperationRepository;
@@ -18,7 +21,8 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -97,19 +101,10 @@ public class OperationService {
      */
     @Transactional
     public Collection<OperationDto> findByPredicate(String userId, Predicate predicate) {
-        if (predicate == null)
+        if (predicate == null || predicate.equals(new BooleanBuilder()))
             return new ArrayList<>();
-        UserInfoEntity userInfo = userInfoService.findByIdIgnoreCase(userId);
 
-        BooleanBuilder booleanBuilder = new BooleanBuilder(predicate);
-
-        //Только принадлежащие пользователю категории
-        List<CategoryEntity> userCategories = userInfo.getCategories();
-        booleanBuilder.and(QOperationEntity.operationEntity.category.in(userCategories));
-
-        //Только принадлежащие пользователю счета
-        List<AccountEntity> userAccounts = accountService.findAllAccountsByUserId(userId);
-        booleanBuilder.and(QOperationEntity.operationEntity.account.in(userAccounts));
+        BooleanBuilder booleanBuilder = securePredicate(userId, predicate);
 
         Iterable<OperationEntity> result = operationRepository.findAll(booleanBuilder);
 
@@ -117,7 +112,7 @@ public class OperationService {
     }
 
     /**
-     * Получить операции за день
+     * Получить операции за день для пользователя и его семьи
      *
      * @param userId        идентификатор пользователя
      * @param operationType тип операции
@@ -125,18 +120,9 @@ public class OperationService {
      * @return
      */
     @Transactional
-    public Collection<OperationDto> dailyOperation(String userId, OperationTypeEnum operationType, OffsetDateTime date) {
-        UserInfoEntity userInfo = userInfoService.findByIdIgnoreCase(userId);
+    public Collection<OperationDto> familyDailyOperations(String userId, OperationTypeEnum operationType, OffsetDateTime date) {
 
-        BooleanBuilder booleanBuilder = new BooleanBuilder();
-
-        //Только принадлежащие пользователю категории
-        List<CategoryEntity> userCategories = userInfo.getCategories();
-        booleanBuilder.and(QOperationEntity.operationEntity.category.in(userCategories));
-
-        //Только принадлежащие пользователю счета
-        List<AccountEntity> userAccounts = accountService.findAllAccountsByUserId(userId);
-        booleanBuilder.and(QOperationEntity.operationEntity.account.in(userAccounts));
+        BooleanBuilder booleanBuilder = securePredicate(userId, new BooleanBuilder());
 
         booleanBuilder.and(QOperationEntity.operationEntity.operationType.eq(operationType));
 
@@ -147,5 +133,25 @@ public class OperationService {
         Iterable<OperationEntity> result = operationRepository.findAll(booleanBuilder);
 
         return operationMapper.mapToDto(result);
+    }
+
+    /**
+     * Модифицирует предикат для поиска только по счетам и категориям принадлежащим пользователю или его семье
+     *
+     * @param userId
+     * @param predicate
+     * @return
+     */
+    private BooleanBuilder securePredicate(String userId, Predicate predicate) {
+        BooleanBuilder booleanBuilder = new BooleanBuilder(predicate);
+
+        //Только принадлежащие пользователю и его семье категории
+        Set<Long> userCategoriesIds = categoryService.findAllFamilyCategoriesByUserId(userId).stream().map(CategoryEntity::getId).collect(Collectors.toSet());
+        booleanBuilder.and(QOperationEntity.operationEntity.category.id.in(userCategoriesIds));
+
+        //Только принадлежащие пользователю и его семье счета
+        Set<Long> userAccountsIds = accountService.findAllFamilyAccountsByUserId(userId).stream().map(AccountEntity::getId).collect(Collectors.toSet());
+        booleanBuilder.and(QOperationEntity.operationEntity.account.id.in(userAccountsIds));
+        return booleanBuilder;
     }
 }

@@ -1,8 +1,6 @@
 package ru.homebuh.core.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,10 +11,14 @@ import ru.homebuh.core.domain.CurrencyEntity;
 import ru.homebuh.core.domain.UserInfoEntity;
 import ru.homebuh.core.mapper.AccountMapper;
 import ru.homebuh.core.repository.AccountRepository;
+import ru.homebuh.core.repository.CurrencyRepository;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import static ru.homebuh.core.service.CurrencyService.notFoundByCodeExceptionSupplier;
 
 @Service
 @RequiredArgsConstructor
@@ -24,13 +26,8 @@ public class AccountService {
 
     private final UserInfoService userInfoService;
     private final AccountRepository accountRepository;
-    @Lazy
-    @Autowired
-    private CurrencyService currencyService;
+    private final CurrencyRepository currencyRepository;
     private final AccountMapper accountMapper;
-    @Lazy
-    @Autowired
-    private AccountService self;
 
     /**
      * Найти все счета пользователя
@@ -55,13 +52,16 @@ public class AccountService {
     }
 
     /**
-     * Найти все счета пользователя и обобщить данные по ним
+     * Найти все счета пользователя и его семьи и обобщить данные по ним
      *
      * @param userId идентификатор пользователя
      * @return список счетов
      */
-    public Collection<AccountSummary> findAllAccountsSummaries(String userId) {
-        return self.findAllAccountsByUserId(userId).stream()
+    public Collection<AccountSummary> findAllFamilyAccountsSummaries(String userId) {
+        List<UserInfoEntity> familyMembers = userInfoService.findAllFamilyMembers(userId);
+        Set<String> familyMembersId = familyMembers.stream().map(UserInfoEntity::getId).collect(Collectors.toSet());
+        List<AccountEntity> familyAccounts = accountRepository.findAllByUserIdIgnoreCase(familyMembersId);
+        return familyAccounts.stream()
                 .collect(Collectors.groupingBy(AccountEntity::getName))
                 .values().stream()
                 .filter(Objects::nonNull)
@@ -79,33 +79,15 @@ public class AccountService {
      */
     public AccountEntity getAccount(Long accountId) {
         return accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Account not found by accountId(" + accountId + ")"));
+                .orElseThrow(notFoundByIdExceptionSupplier(accountId));
     }
 
-    /**
-     * Создать все счёта для определённой валюты
-     *
-     * @param userInfo пользователь
-     * @param currency валюта счёта
-     */
-    @Transactional
-    public void createUserAccountsWithCurrency(UserInfoEntity userInfo, CurrencyEntity currency) {
-        List<AccountEntity> userAccounts = accountRepository.findAllByUserIdIgnoreCase(userInfo.getId());
-        Map<String, String> accountNames = userAccounts.stream()
-                .collect(Collectors.toMap(AccountEntity::getName, AccountEntity::getDescription, (first, second) -> first));
-        List<AccountEntity> newAccounts = new ArrayList<>(accountNames.size());
-        accountNames.forEach((name, description) -> {
-            AccountEntity account = new AccountEntity();
-            account.setCurrency(currency);
-            account.setName(name);
-            account.setUserInfo(userInfo);
-            account.setDescription(description == null ? "" : description);
-            newAccounts.add(account);
-        });
-        accountRepository.saveAll(newAccounts);
+    public static Supplier<ResponseStatusException> notFoundByIdExceptionSupplier(Long accountId) {
+        return () -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Account not found by accountId(" + accountId + ")");
     }
+
 
     /**
      * Получить обобщённую информацию о счёте
@@ -114,7 +96,8 @@ public class AccountService {
      * @return обобщённая информация о счёте
      */
     public AccountSummary findAccountSummaryByAccountId(Long accountId) {
-        AccountEntity account = self.getAccount(accountId);
+        AccountEntity account = accountRepository.findById(accountId)
+                .orElseThrow(notFoundByIdExceptionSupplier(accountId));
         UserInfoEntity userInfo = account.getUserInfo();
         String userId = userInfo.getId();
         String name = account.getName();
@@ -131,7 +114,7 @@ public class AccountService {
      */
     @Transactional
     public AccountSummary create(String userId, AccountCreate accountCreate) {
-        UserInfoEntity userInfo = userInfoService.findByIdIgnoreCase(userId);
+        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
 
         //Проверить, что у семьи не существует счетов с таким именем
         List<UserInfoEntity> allFamilyMembers = userInfoService.findAllFamilyMembers(userId);
@@ -142,7 +125,25 @@ public class AccountService {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Account with name \"" + name + "\" already exists.");
         }
 
-        Collection<AccountEntity> newAccounts = self.createNewAccounts(userInfo, accountCreate);
+        Collection<AccountBalanceCreate> balances = accountCreate.getInitialBalance();
+        if (balances == null || balances.isEmpty())
+            return accountMapper.mapToSummary(Collections.emptyList());
+
+        String description = accountCreate.getDescription() == null ? "" : accountCreate.getDescription();
+
+
+        Collection<AccountEntity> newAccounts = balances.stream().map(item -> {
+            AccountEntity account = new AccountEntity();
+            account.setName(name);
+            account.setDescription(description);
+            account.setUserInfo(userInfo);
+            account.setInitialBalance(new BigDecimal(item.getAmount()));
+            String currencyCode = item.getCurrencyCode();
+            CurrencyEntity currency = currencyRepository.findByCodeIgnoreCase(currencyCode).orElseThrow(notFoundByCodeExceptionSupplier(currencyCode));
+            account.setCurrency(currency);
+            return account;
+        }).toList();
+
         newAccounts = accountRepository.saveAll(newAccounts);
         return accountMapper.mapToSummary(newAccounts);
     }
@@ -184,27 +185,4 @@ public class AccountService {
         return accountMapper.mapToSummary(accountsForUpdate);
     }
 
-    private Collection<AccountEntity> createNewAccounts(UserInfoEntity userInfo, AccountCreate source) {
-        if (source == null)
-            return Collections.emptyList();
-
-        Collection<AccountBalanceCreate> balances = source.getInitialBalance();
-        if (balances == null || balances.isEmpty())
-            return Collections.emptyList();
-
-        String name = source.getName() == null ? "" : source.getName();
-        String description = source.getDescription() == null ? "" : source.getDescription();
-
-
-        return balances.stream().map(item -> {
-            AccountEntity account = new AccountEntity();
-            account.setName(name);
-            account.setDescription(description);
-            account.setUserInfo(userInfo);
-            account.setInitialBalance(new BigDecimal(item.getAmount()));
-            CurrencyEntity currency = currencyService.getByCode(item.getCurrencyCode());
-            account.setCurrency(currency);
-            return account;
-        }).toList();
-    }
 }

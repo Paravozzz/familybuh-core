@@ -23,7 +23,6 @@ public class ControllerServiceFacade {
     private final OperationService operationService;
     private final SettingService settingService;
     private final AuthorizationService authorizationService;
-    private final UserInfoService userInfoService;
 
     public Collection<AccountEntity> findAllFamilyAccountsByUserId(String userId) {
         return accountService.findAllFamilyAccountsByUserId(userId);
@@ -36,25 +35,27 @@ public class ControllerServiceFacade {
     public AccountSummary updateAccount(String userId, AccountUpdate accountUpdate) {
         //проверяем, что обновляемые счета принадлежат пользователю или семье
         accountUpdate.getInitialBalance()
-                .forEach(b -> authorizationService.isAuthorized(userId, b.getAccountId()));
+                .forEach(b -> authorizationService.account(userId, b.getAccountId()));
         return accountService.update(userId, accountUpdate);
     }
 
-    public Collection<AccountSummary> findAllAccountsSummaries(String userid) {
-        return accountService.findAllAccountsSummaries(userid);
+    public Collection<AccountSummary> findAllFamilyAccountsSummaries(String userid) {
+        return accountService.findAllFamilyAccountsSummaries(userid);
     }
 
     public AccountSummary findUserAccountSummaryByAccountId(String userId, Long accountId) {
-        //TODO: проверить что запрашиваемый счёт принадлежит пользователю или семье
+        //проверяем, что счет принадлежит пользователю или семье
+        authorizationService.account(userId, accountId);
         return accountService.findAccountSummaryByAccountId(accountId);
     }
 
-    public Collection<CategoryEntity> findAllUserCategoriesByUserId(String userId) {
-        return categoryService.findAllByUserId(userId);
+    public Collection<CategoryEntity> findAllFamilyCategoriesByUserId(String userId) {
+        return categoryService.findAllFamilyCategoriesByUserId(userId);
     }
 
     public CategoryEntity findUserCategoryById(String userId, Long categoryId) {
-        //TODO: проверить что категория принадлежит пользователю или семье
+        //проверяем, что категория принадлежит пользователю или семье
+        authorizationService.category(userId, categoryId);
         return categoryService.getCategory(categoryId);
     }
 
@@ -63,7 +64,8 @@ public class ControllerServiceFacade {
     }
 
     public CategoryEntity updateCategory(String userId, Long categoryId, CategoryUpdate categoryUpdate) {
-        //TODO: проверить что категория принадлежит пользователю или семье
+        //проверяем, что категория принадлежит пользователю или семье
+        authorizationService.category(userId, categoryId);
         return categoryService.update(categoryId, categoryUpdate);
     }
 
@@ -75,8 +77,8 @@ public class ControllerServiceFacade {
         return currencyService.getByCode(currencyCode);
     }
 
-    public Collection<CurrencyEntity> findAllCurrenciesByUserId(String userId) {
-        return currencyService.findAllByUserId(userId);
+    public Collection<CurrencyEntity> findAllFamilyCurrenciesByUserId(String userId) {
+        return currencyService.findAllFamilyCurrenciesByUserId(userId);
     }
 
     public CurrencyEntity attachCurrencyToUser(String userId, String currencyCode) {
@@ -108,7 +110,7 @@ public class ControllerServiceFacade {
     }
 
     public Collection<OperationDto> dailyOperation(String userId, OperationTypeEnum operationType, OffsetDateTime date) {
-        return operationService.dailyOperation(userId, operationType, date);
+        return operationService.familyDailyOperations(userId, operationType, date);
     }
 
     public SettingDto findUserSettingByName(String userId, String name) {

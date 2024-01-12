@@ -136,6 +136,10 @@
             <column name="date" type="timestamptz" defaultOnNull="true" defaultValueComputed="${now}">
                 <constraints nullable="false"/>
             </column>
+            <column name="user_info_id" type="varchar(36)">
+                <constraints nullable="false" foreignKeyName="fk_operation_user_info" referencedTableName="user_info"
+                             referencedColumnNames="id"/>
+            </column>
         </createTable>
 
         <createTable tableName="user_info_category">

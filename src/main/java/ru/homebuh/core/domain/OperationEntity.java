@@ -1,5 +1,6 @@
 package ru.homebuh.core.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -64,4 +65,10 @@ public class OperationEntity {
     @Order(8)
     @JsonProperty("date")
     private OffsetDateTime date;
+
+    @ManyToOne
+    @JoinColumn(name = "user_info_id", nullable = false)
+    @Order(9)
+    @JsonIgnore
+    private UserInfoEntity userInfo;
 }

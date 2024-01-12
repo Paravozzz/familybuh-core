@@ -37,14 +37,14 @@ public class AccountController {
     }
 
     /**
-     * Получение обобщённой информации о счётах пользователя
+     * Получение обобщённой информации о счётах пользователя и его семьи
      *
      * @param token
      * @return
      */
     @GetMapping("user/account-summaries")
     Collection<AccountSummary> getAllSummaries(final JwtAuthenticationToken token) {
-        return controllerServiceFacade.findAllAccountsSummaries(token.getName());
+        return controllerServiceFacade.findAllFamilyAccountsSummaries(token.getName());
     }
 
     /**

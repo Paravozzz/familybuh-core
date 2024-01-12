@@ -15,6 +15,8 @@ import ru.homebuh.core.util.Constants;
 
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,14 +26,17 @@ public class CategoryService {
     private final UserInfoService userInfoService;
 
     /**
-     * Найти все категории пользователя
+     * Найти все категории пользователя и его семьи
      *
-     * @param id идентификатор пользователя
-     * @return список всех категорий пользователя
+     * @param userId идентификатор пользователя
+     * @return список всех категорий пользователя и его семьи
      */
-    public List<CategoryEntity> findAllByUserId(String id) {
-        return categoryRepository.findAllByUserId(id);
+    public List<CategoryEntity> findAllFamilyCategoriesByUserId(String userId) {
+        List<UserInfoEntity> familyMembers = userInfoService.findAllFamilyMembers(userId);
+        Set<String> membersIds = familyMembers.stream().map(UserInfoEntity::getId).collect(Collectors.toSet());
+        return categoryRepository.findAllByUserIdIn(membersIds);
     }
+
 
     /**
      * Найти все расходные категории пользователя
@@ -77,7 +82,7 @@ public class CategoryService {
     @Transactional
     public CategoryEntity create(String userInfoId, CategoryCreate categoryCreate) {
         CategoryEntity newCategory = categoryMapper.map(categoryCreate);
-        UserInfoEntity userInfo = userInfoService.findByIdIgnoreCase(userInfoId);
+        UserInfoEntity userInfo = userInfoService.getUserInfo(userInfoId);
 
         List<CategoryEntity> categories = userInfo.getCategories();
         if (categories.contains(newCategory)) {
