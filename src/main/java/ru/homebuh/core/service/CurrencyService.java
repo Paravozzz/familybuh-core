@@ -12,6 +12,7 @@ import ru.homebuh.core.repository.AccountRepository;
 import ru.homebuh.core.repository.CurrencyRepository;
 import ru.homebuh.core.util.Constants;
 
+import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,6 +74,7 @@ public class CurrencyService {
                 account.setName(name);
                 account.setUserInfo(userInfo);
                 account.setDescription(description == null ? "" : description);
+                account.setInitialBalance(new BigDecimal(0));
                 newAccounts.add(account);
             });
             accountRepository.saveAll(newAccounts);

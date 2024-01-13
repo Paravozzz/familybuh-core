@@ -126,8 +126,15 @@ public class AccountService {
         }
 
         Collection<AccountBalanceCreate> balances = accountCreate.getInitialBalance();
-        if (balances == null || balances.isEmpty())
-            return accountMapper.mapToSummary(Collections.emptyList());
+        if (balances == null || balances.isEmpty()) {
+            Set<String> userCurrencies = userInfo.getCurrencies().stream().map(currency -> currency.getCode()).collect(Collectors.toSet());
+            balances = userCurrencies.stream()
+                    .map(currencyCode -> AccountBalanceCreate.builder()
+                            .currencyCode(currencyCode)
+                            .amount("0")
+                            .build())
+                    .toList();
+        }
 
         String description = accountCreate.getDescription() == null ? "" : accountCreate.getDescription();
 
