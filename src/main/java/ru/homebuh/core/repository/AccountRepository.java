@@ -1,6 +1,7 @@
 package ru.homebuh.core.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import ru.homebuh.core.domain.AccountEntity;
 
@@ -57,4 +58,8 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
      */
     @Query("select account from AccountEntity account where account.id in ?1")
     List<AccountEntity> findAccounts(Collection<Long> accountIds);
+
+    @Modifying
+    @Query("delete AccountEntity account where account.userInfo.id in ?1")
+    void deleteAllFamilyAccounts(Collection<String> familyIds);
 }

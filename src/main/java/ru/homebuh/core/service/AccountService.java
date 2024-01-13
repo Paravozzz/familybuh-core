@@ -127,7 +127,7 @@ public class AccountService {
 
         Collection<AccountBalanceCreate> balances = accountCreate.getInitialBalance();
         if (balances == null || balances.isEmpty()) {
-            Set<String> userCurrencies = userInfo.getCurrencies().stream().map(currency -> currency.getCode()).collect(Collectors.toSet());
+            Set<String> userCurrencies = userInfo.getCurrencies().stream().map(CurrencyEntity::getCode).collect(Collectors.toSet());
             balances = userCurrencies.stream()
                     .map(currencyCode -> AccountBalanceCreate.builder()
                             .currencyCode(currencyCode)
@@ -190,6 +190,11 @@ public class AccountService {
         });
         accountsForUpdate = accountRepository.saveAll(accountsForUpdate);
         return accountMapper.mapToSummary(accountsForUpdate);
+    }
+
+    @Transactional
+    public void deleteAllFamilyAccounts(Collection<String> familyIds) {
+        accountRepository.deleteAllFamilyAccounts(familyIds);
     }
 
 }

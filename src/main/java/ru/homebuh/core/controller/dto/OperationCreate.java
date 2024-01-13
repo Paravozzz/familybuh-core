@@ -30,4 +30,7 @@ public class OperationCreate {
 
     @JsonProperty("date")
     private OffsetDateTime date;
+
+    @JsonProperty("userId")
+    private String userId;
 }

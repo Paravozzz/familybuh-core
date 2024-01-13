@@ -14,6 +14,7 @@ import ru.homebuh.core.repository.CategoryRepository;
 import ru.homebuh.core.util.Constants;
 
 import java.text.MessageFormat;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -107,5 +108,10 @@ public class CategoryService {
 
         //TODO: Проверить что у пользователя или семьи нет категории с таким же именем
         return categoryRepository.save(categoryMapper.map(categoryId, categoryUpdate));
+    }
+
+    @Transactional
+    public void deleteAllCategoriesByIdIn(Collection<Long> familyCategotiesIds) {
+        categoryRepository.deleteAllById(familyCategotiesIds);
     }
 }

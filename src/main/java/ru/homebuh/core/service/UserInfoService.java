@@ -12,6 +12,7 @@ import ru.homebuh.core.repository.UserInfoRepository;
 import ru.homebuh.core.util.Constants;
 
 import java.text.MessageFormat;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
@@ -47,6 +48,10 @@ public class UserInfoService {
         userInfoRepository.save(userInfoEntity);
     }
 
+    @Transactional
+    public void saveAll(Collection<UserInfoEntity> userInfoEntiies) {
+        userInfoRepository.saveAll(userInfoEntiies);
+    }
 
     public List<UserInfoEntity> findAllFamilyMembers(String userId) {
         UserInfoEntity userInfo = userInfoRepository.findByIdIgnoreCase(userId)

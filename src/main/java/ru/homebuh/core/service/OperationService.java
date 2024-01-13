@@ -9,10 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ru.homebuh.core.controller.dto.OperationCreate;
 import ru.homebuh.core.controller.dto.OperationDto;
-import ru.homebuh.core.domain.AccountEntity;
-import ru.homebuh.core.domain.CategoryEntity;
-import ru.homebuh.core.domain.OperationEntity;
-import ru.homebuh.core.domain.QOperationEntity;
+import ru.homebuh.core.domain.*;
 import ru.homebuh.core.domain.enums.OperationTypeEnum;
 import ru.homebuh.core.mapper.OperationMapper;
 import ru.homebuh.core.repository.OperationRepository;
@@ -43,7 +40,7 @@ public class OperationService {
      */
     @Transactional
     public OperationDto expenseCreate(String userId, OperationCreate operationCreate) {
-        userInfoService.isUserExists(userId);
+        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
         AccountEntity userAccount = accountService.getAccount(operationCreate.getAccountId());
         final Long categoryId = operationCreate.getCategoryId();
         CategoryEntity category = categoryService.getCategory(categoryId);
@@ -57,6 +54,7 @@ public class OperationService {
         expenseOperation.setOperationType(OperationTypeEnum.EXPENSE);
         expenseOperation.setDescription(operationCreate.getDescription());
         expenseOperation.setDate(operationCreate.getDate());
+        expenseOperation.setUserInfo(userInfo);
 
         expenseOperation = operationRepository.save(expenseOperation);
 
@@ -72,7 +70,7 @@ public class OperationService {
      */
     @Transactional
     public OperationDto incomeCreate(String userId, OperationCreate operationCreate) {
-        userInfoService.isUserExists(userId);
+        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
         AccountEntity userAccount = accountService.getAccount(operationCreate.getAccountId());
         final Long categoryId = operationCreate.getCategoryId();
         CategoryEntity category = categoryService.getCategory(categoryId);
@@ -86,6 +84,7 @@ public class OperationService {
         incomeOperation.setOperationType(OperationTypeEnum.INCOME);
         incomeOperation.setDescription(operationCreate.getDescription());
         incomeOperation.setDate(operationCreate.getDate());
+        incomeOperation.setUserInfo(userInfo);
 
         incomeOperation = operationRepository.save(incomeOperation);
 
@@ -133,6 +132,11 @@ public class OperationService {
         Iterable<OperationEntity> result = operationRepository.findAll(booleanBuilder);
 
         return operationMapper.mapToDto(result);
+    }
+
+    @Transactional
+    public void deleteAllFamilyOperations(Collection<String> familyIds) {
+        operationRepository.deleteAllByUserIdIn(familyIds);
     }
 
     /**
