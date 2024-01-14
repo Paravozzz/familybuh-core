@@ -7,7 +7,9 @@ import ru.homebuh.core.controller.dto.*;
 import ru.homebuh.core.domain.AccountEntity;
 import ru.homebuh.core.domain.CategoryEntity;
 import ru.homebuh.core.domain.CurrencyEntity;
+import ru.homebuh.core.domain.OperationEntity;
 import ru.homebuh.core.domain.enums.OperationTypeEnum;
+import ru.homebuh.core.mapper.OperationMapper;
 
 import java.time.OffsetDateTime;
 import java.util.Collection;
@@ -23,6 +25,7 @@ public class ControllerServiceFacade {
     private final OperationService operationService;
     private final SettingService settingService;
     private final AuthorizationService authorizationService;
+    private final OperationMapper operationMapper;
 
     public Collection<AccountEntity> findAllFamilyAccountsByUserId(String userId) {
         return accountService.findAllFamilyAccountsByUserId(userId);
@@ -97,12 +100,14 @@ public class ControllerServiceFacade {
         initService.initUser(userId, initCreate);
     }
 
-    public OperationDto expenseCreate(String userId, OperationCreate operationCreate) {
-        return operationService.expenseCreate(userId, operationCreate);
+    public OperationDto createExpense(String userId, OperationCreate operationCreate) {
+        OperationEntity expense = operationService.createExpense(userId, operationCreate);
+        return operationMapper.mapToDto(expense);
     }
 
-    public OperationDto incomeCreate(String userId, OperationCreate operationCreate) {
-        return operationService.incomeCreate(userId, operationCreate);
+    public OperationDto createIncome(String userId, OperationCreate operationCreate) {
+        OperationEntity income = operationService.createIncome(userId, operationCreate);
+        return operationMapper.mapToDto(income);
     }
 
     public Collection<OperationDto> findOperationsByPredicate(String userId, Predicate predicate) {

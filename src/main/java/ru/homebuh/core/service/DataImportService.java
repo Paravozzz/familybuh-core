@@ -5,17 +5,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import ru.homebuh.core.controller.dto.AccountCreate;
-import ru.homebuh.core.controller.dto.AccountSummary;
-import ru.homebuh.core.controller.dto.CategoryCreate;
-import ru.homebuh.core.controller.dto.OperationCreate;
+import ru.homebuh.core.controller.dto.*;
 import ru.homebuh.core.domain.AccountEntity;
 import ru.homebuh.core.domain.CategoryEntity;
 import ru.homebuh.core.domain.UserInfoEntity;
+import ru.homebuh.core.mapper.AccountMapper;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -32,10 +31,12 @@ import java.util.zip.ZipInputStream;
 public class DataImportService {
 
     private final AccountService accountService;
+    private final AccountMapper accountMapper;
     private final CurrencyService currencyService;
     private final UserInfoService userInfoService;
     private final CategoryService categoryService;
     private final OperationService operationService;
+    private final TransferService transferService;
 
     @Transactional
     public void importData1(String zipPath, String userId) throws IOException {
@@ -45,6 +46,7 @@ public class DataImportService {
         //О Ч И С Т К А   П О Л Ь З О В А Т Е Л Ь С К И Х   Д А Н Н Ы Х
         List<UserInfoEntity> family = userInfoService.findAllFamilyMembers(userId);
         Set<String> familyIds = family.stream().map(UserInfoEntity::getId).collect(Collectors.toSet());
+        //TODO: удалить всё из transfer
         operationService.deleteAllFamilyOperations(familyIds);
         accountService.deleteAllFamilyAccounts(familyIds);
         family.forEach(userInfoEntity -> userInfoEntity.getCurrencies().clear());
@@ -59,28 +61,31 @@ public class DataImportService {
         userInfoService.saveAll(family);
 
         //Р А С П А К О В К А   А Р Х И В А
-        File file = new File(zipPath);
-        List<String> fileList = unzip(file, "c:\\homebuhdata\\" + UUID.randomUUID());
+        File zipFile = new File(zipPath);
+        List<String> fileList = unzip(zipFile);
 
         //И М П О Р Т   В А Л Ю Т
-        //Идентификаторы чужих валют <чужой id, код валюты>
-        Map<Long, String> importedCurrenciesMap = new HashMap<>();
-
         String currencyPath = fileList.stream()
                 .filter(path -> path.endsWith("currency.txt"))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found required currency.txt"));
 
+        //Идентификаторы чужих валют <чужой id, код валюты>
+        Map<Long, String> importedCurrenciesMap = new HashMap<>();
+
         try (Stream<String> currencyLines = Files.lines(Paths.get(currencyPath), StandardCharsets.UTF_8)) {
-            currencyLines.forEach(line -> {
-                String[] split = line.split(";");
+            currencyLines
+                    .filter(line -> !line.isBlank())
+                    .forEach(line -> {
 
-                String currencyCode = split[0];
-                Long importedCurrencyId = Long.valueOf(split[2].trim().replace("\"", ""));
+                        String[] split = line.split(";");
 
-                currencyCode = currencyCode.trim().replace("\"", "").toUpperCase();
+                        String currencyCode = split[0];
+                        Long importedCurrencyId = Long.valueOf(split[2].trim().replace("\"", ""));
 
-                currencyService.attachCurrencyToUser(userId, currencyCode);
+                        currencyCode = currencyCode.trim().replace("\"", "").toUpperCase();
+
+                        currencyService.attachCurrencyToUser(userId, currencyCode);
 
                 importedCurrenciesMap.put(importedCurrencyId, currencyCode);
 
@@ -88,115 +93,143 @@ public class DataImportService {
         }
 
         //И М П О Р Т   С Ч Е Т О В
-
-        //Идентификаторы чужих счетов <чужой id, суммарная информация по счёту>
-        Map<Long, AccountSummary> importedAccountsMap = new HashMap<>();
-
-        String accountPath = fileList.stream()
+        String accountsPath = fileList.stream()
                 .filter(path -> path.endsWith("account_category.txt"))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found required account_category.txt"));
 
         Set<String> familyAccountNames = accountService.findAllFamilyAccountsByUserId(userId).stream().map(AccountEntity::getName).collect(Collectors.toSet());
 
-        try (Stream<String> accountLines = Files.lines(Paths.get(accountPath), StandardCharsets.UTF_8)) {
-            accountLines.sequential().forEach(line -> {
-                String[] split = line.split(";");
-                String name = split[0].trim().replace("\"", "");
-                Long importedAccountId = Long.valueOf(split[1].trim().replace("\"", ""));
+        //Идентификаторы чужих счетов <чужой id, суммарная информация по счёту>
+        Map<Long, AccountSummary> importedAccountsMap = new HashMap<>();
 
-                String accountName = getUniqueName(familyAccountNames, name);
+        try (Stream<String> accounts = Files.lines(Paths.get(accountsPath), StandardCharsets.UTF_8)) {
+            accounts.sequential()
+                    .filter(line -> !line.isBlank())
+                    .forEach(line -> {
 
-                AccountSummary createdAccount = accountService.create(userId, AccountCreate.builder().name(accountName).build());
+                        String[] split = line.split(";");
+                        String name = split[0].trim().replace("\"", "");
+                        Long importedAccountId = Long.valueOf(split[1].trim().replace("\"", ""));
 
-                familyAccountNames.add(accountName);
+                        String accountName = getUniqueName(familyAccountNames, name);
+
+                        AccountSummary createdAccount = accountService.create(userId, AccountCreate.builder().name(accountName).build());
+
+                        familyAccountNames.add(accountName);
                 importedAccountsMap.put(importedAccountId, createdAccount);
             });
         }
 
         //И М П О Р Т   Р А С Х О Д Н Ы Х   К А Т Е Г О Р И Й
-
-        //Идентификаторы чужих категорий <чужой id, наш id>
-        Map<Long, Long> importedExpenceCategoriesMap = new HashMap<>();
         String expCategoriesPath = fileList.stream()
                 .filter(path -> path.endsWith("expense_category.txt"))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found required expense_category.txt"));
 
-        Set<String> familyExpCategories = categoryService.findAllFamilyCategoriesByUserId(userId).stream()
+        Set<String> familyExpenseCategories = categoryService.findAllFamilyCategoriesByUserId(userId).stream()
                 .filter(c -> !c.isIncome())
                 .map(CategoryEntity::getName)
                 .collect(Collectors.toSet());
 
-        try (Stream<String> expCatLines = Files.lines(Paths.get(expCategoriesPath), StandardCharsets.UTF_8)) {
-            expCatLines.sequential().forEach(line -> {
-                String[] split = line.split(";");
-                String name = split[0].trim().replace("\"", "");
-                Long importedCategoryId = Long.valueOf(split[1].trim().replace("\"", ""));
+        //Идентификаторы чужих категорий <чужой id, наш id>
+        Map<Long, Long> importedExpenseCategoriesMap = new HashMap<>();
 
-                String categoryName = getUniqueName(familyExpCategories, name);
+        try (Stream<String> expenseCategories = Files.lines(Paths.get(expCategoriesPath), StandardCharsets.UTF_8)) {
+            expenseCategories.sequential()
+                    .filter(line -> !line.isBlank())
+                    .forEach(line -> {
 
-                CategoryEntity createdCategory = categoryService.create(userId, new CategoryCreate(categoryName, false));
+                        String[] split = line.split(";");
+                        String name = split[0].trim().replace("\"", "");
+                        Long importedCategoryId = Long.valueOf(split[1].trim().replace("\"", ""));
 
-                familyExpCategories.add(categoryName);
-                importedExpenceCategoriesMap.put(importedCategoryId, createdCategory.getId());
-            });
+                        String categoryName = getUniqueName(familyExpenseCategories, name);
+
+                        CategoryEntity createdCategory = categoryService.create(userId, new CategoryCreate(categoryName, false));
+
+                        familyExpenseCategories.add(categoryName);
+                        importedExpenseCategoriesMap.put(importedCategoryId, createdCategory.getId());
+                    });
         }
 
         //И М П О Р Т   Д О Х О Д Н Ы Х   К А Т Е Г О Р И Й
-
-        //Идентификаторы чужих категорий <чужой id, наш id>
-        Map<Long, Long> importedIncomeCategoriesMap = new HashMap<>();
         String incCategoriesPath = fileList.stream()
                 .filter(path -> path.endsWith("income_category.txt"))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found required income_category.txt"));
 
-        Set<String> familyIncCategories = categoryService.findAllFamilyCategoriesByUserId(userId).stream()
+        Set<String> familyIncomeCategories = categoryService.findAllFamilyCategoriesByUserId(userId).stream()
                 .filter(CategoryEntity::isIncome)
                 .map(CategoryEntity::getName)
                 .collect(Collectors.toSet());
 
+        //Идентификаторы чужих категорий <чужой id, наш id>
+        Map<Long, Long> importedIncomeCategoriesMap = new HashMap<>();
+
         try (Stream<String> incCatLines = Files.lines(Paths.get(incCategoriesPath), StandardCharsets.UTF_8)) {
-            incCatLines.sequential().forEach(line -> {
-                String[] split = line.split(";");
-                String name = split[0].trim().replace("\"", "");
-                Long importedCategoryId = Long.valueOf(split[1].trim().replace("\"", ""));
+            incCatLines.sequential()
+                    .filter(line -> !line.isBlank())
+                    .forEach(line -> {
 
-                String categoryName = getUniqueName(familyIncCategories, name);
+                        String[] split = line.split(";");
+                        String name = split[0].trim().replace("\"", "");
+                        Long importedCategoryId = Long.valueOf(split[1].trim().replace("\"", ""));
 
-                CategoryEntity createdCategory = categoryService.create(userId, new CategoryCreate(categoryName, true));
+                        String categoryName = getUniqueName(familyIncomeCategories, name);
 
-                familyIncCategories.add(categoryName);
-                importedIncomeCategoriesMap.put(importedCategoryId, createdCategory.getId());
-            });
+                        CategoryEntity createdCategory = categoryService.create(userId, new CategoryCreate(categoryName, true));
+
+                        familyIncomeCategories.add(categoryName);
+                        importedIncomeCategoriesMap.put(importedCategoryId, createdCategory.getId());
+                    });
         }
 
         //И М П О Р Т   Д О Х О Д О В
 
-        String incPath = fileList.stream()
+        String incomesPath = fileList.stream()
                 .filter(path -> path.endsWith("income.txt"))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found required income.txt"));
 
-        try (Stream<String> expLines = Files.lines(Paths.get(incPath), StandardCharsets.UTF_8)) {
-            expLines.sequential().forEach(line -> {
-                OperationCreate operationCreate = getOperationCreate(userId, importedCurrenciesMap, importedAccountsMap, importedIncomeCategoriesMap, line);
-                operationService.incomeCreate(userId, operationCreate);
-            });
+        try (Stream<String> incomes = Files.lines(Paths.get(incomesPath), StandardCharsets.UTF_8)) {
+            incomes.sequential()
+                    .filter(line -> !line.isBlank())
+                    .forEach(line -> {
+
+                        OperationCreate operationCreate = getOperationCreate(importedCurrenciesMap, importedAccountsMap, importedIncomeCategoriesMap, line);
+                        //если categoryId = null, то это начальный остаток по счёту
+                        if (operationCreate.getCategoryId() == null) {
+                            Long accountId = operationCreate.getAccountId();
+                            AccountSummary accountSummary = accountService.findAccountSummaryByAccountId(accountId);
+                            AccountUpdate accountUpdate = accountMapper.mapSummaryToUpdate(accountSummary);
+                            accountUpdate.getInitialBalance().stream()
+                                    .filter(accountBalanceUpdate -> accountBalanceUpdate.getAccountId().equals(accountId))
+                                    .findFirst()
+                                    .get()
+                                    .setAmount(operationCreate.getAmount());
+                            accountService.update(userId, accountUpdate);
+                            return;
+                        }
+
+                        operationService.createIncome(userId, operationCreate);
+                    });
         }
 
         //И М П О Р Т   Р А С Х О Д О В
-        String expPath = fileList.stream()
+        String expensesPath = fileList.stream()
                 .filter(path -> path.endsWith("expense.txt"))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found required expense.txt"));
 
-        try (Stream<String> expLines = Files.lines(Paths.get(expPath), StandardCharsets.UTF_8)) {
-            expLines.sequential().forEach(line -> {
-                OperationCreate operationCreate = getOperationCreate(userId, importedCurrenciesMap, importedAccountsMap, importedExpenceCategoriesMap, line);
-                operationService.expenseCreate(userId, operationCreate);
-            });
+        try (Stream<String> expenses = Files.lines(Paths.get(expensesPath), StandardCharsets.UTF_8)) {
+            expenses.sequential()
+                    .filter(line -> !line.isBlank())
+                    .forEach(line -> {
+
+                        OperationCreate operationCreate = getOperationCreate(importedCurrenciesMap, importedAccountsMap, importedExpenseCategoriesMap, line);
+                        operationService.createExpense(userId, operationCreate);
+                    });
         }
 
         //И М П О Р Т   П Е Р Е М Е Щ Е Н И Й
@@ -205,24 +238,42 @@ public class DataImportService {
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found required transfer.txt"));
 
+        try (Stream<String> transfers = Files.lines(Paths.get(transferPath), StandardCharsets.UTF_8)) {
+            transfers.sequential()
+                    .filter(line -> !line.isBlank())
+                    .forEach(line -> {
+
+                        TransferCreate transferCreate = getTransferCreate(importedCurrenciesMap, importedAccountsMap, line);
+                        transferService.transferCreate(userId, transferCreate);
+                    });
+        }
+
         //И М П О Р Т   О Б М Е Н О В   В А Л Ю Т Ы
         String exchangePath = fileList.stream()
                 .filter(path -> path.endsWith("exchange.txt"))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Not found required exchange.txt"));
+
+        try (Stream<String> exchanges = Files.lines(Paths.get(exchangePath), StandardCharsets.UTF_8)) {
+            exchanges.sequential()
+                    .filter(line -> !line.isBlank())
+                    .forEach(line -> {
+
+                    });
+        }
     }
 
     private static String getUniqueName(Set<String> existentNames, String name) {
         String uniqueName = name;
         int nameIndex = 1;
         while (existentNames.contains(uniqueName)) {
-            uniqueName = name + nameIndex;
+            uniqueName = name + "(" + nameIndex + ")";
             nameIndex++;
         }
         return uniqueName;
     }
 
-    private static OperationCreate getOperationCreate(String userId, Map<Long, String> importedCurrenciesMap, Map<Long, AccountSummary> importedAccountsMap, Map<Long, Long> importedCategoriesMap, String line) {
+    private static OperationCreate getOperationCreate(Map<Long, String> importedCurrenciesMap, Map<Long, AccountSummary> importedAccountsMap, Map<Long, Long> importedCategoriesMap, String line) {
         String[] split = line.split(";");
         String amount = split[6].trim().replace("\"", "").replace(",", ".");
         Long accountOldId = Long.valueOf(split[7].trim().replace("\"", ""));
@@ -231,9 +282,6 @@ public class DataImportService {
         String currencyCode = importedCurrenciesMap.get(currencyOldId);
         Long accountId = accountSummary.getInitialBalance().stream().filter(s -> s.getCurrencyCode().equalsIgnoreCase(currencyCode)).findFirst().get().getAccountId();
         String categoryOldIdStr = split[5].trim().replace("\"", "");
-
-        //TODO: если categoryOldIdStr = "-1", то это начальный остаток по счёту
-
         Long categoryOldId = Long.valueOf(categoryOldIdStr);
         Long categoryId = importedCategoriesMap.get(categoryOldId);
         String description = split[3].trim().replace("\"", "");
@@ -241,10 +289,11 @@ public class DataImportService {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         LocalDateTime localDate = LocalDateTime.parse(dateOld, formatter);
         OffsetDateTime date = OffsetDateTime.of(localDate, ZoneOffset.UTC);
-        return new OperationCreate(amount, currencyCode, accountId, categoryId, description, date, userId);
+        return new OperationCreate(amount, currencyCode, accountId, categoryId, description, date);
     }
 
-    public static List<String> unzip(File source, String out) throws IOException {
+    public static List<String> unzip(File source) throws IOException {
+        Path out = Files.createTempDirectory("homebuh");
         List<String> fileList = new ArrayList<>();
         try (ZipInputStream zis = new ZipInputStream(new FileInputStream(source))) {
 
@@ -252,7 +301,7 @@ public class DataImportService {
 
             while (entry != null) {
 
-                File file = new File(out, entry.getName());
+                File file = new File(out.toAbsolutePath().toString(), entry.getName());
 
                 if (entry.isDirectory()) {
                     file.mkdirs();
@@ -279,5 +328,32 @@ public class DataImportService {
             }
         }
         return fileList;
+    }
+
+    private static TransferCreate getTransferCreate(Map<Long, String> importedCurrenciesMap, Map<Long, AccountSummary> importedAccountsMap, String line) {
+        String[] split = line.split(";");
+
+        String amount = split[2].trim().replace("\"", "").replace(",", ".");
+
+        Long expenseAccountOldId = Long.valueOf(split[8].trim().replace("\"", ""));
+        AccountSummary expenseAccountSummary = importedAccountsMap.get(expenseAccountOldId);
+
+        Long incomeAccountOldId = Long.valueOf(split[7].trim().replace("\"", ""));
+        AccountSummary incomeAccountSummary = importedAccountsMap.get(incomeAccountOldId);
+
+        Long currencyOldId = Long.valueOf(split[6].trim().replace("\"", ""));
+        String currencyCode = importedCurrenciesMap.get(currencyOldId);
+
+        Long expenseAccountId = expenseAccountSummary.getInitialBalance().stream().filter(s -> s.getCurrencyCode().equalsIgnoreCase(currencyCode)).findFirst().get().getAccountId();
+        Long incomeAccountId = incomeAccountSummary.getInitialBalance().stream().filter(s -> s.getCurrencyCode().equalsIgnoreCase(currencyCode)).findFirst().get().getAccountId();
+
+        String description = split[5].trim().replace("\"", "");
+
+        String dateOld = split[4].trim().replace("\"", "").replace(" ", "T");
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+        LocalDateTime localDate = LocalDateTime.parse(dateOld, formatter);
+        OffsetDateTime date = OffsetDateTime.of(localDate, ZoneOffset.ofHours(0));
+
+        return new TransferCreate(amount, expenseAccountId, incomeAccountId, description, date);
     }
 }

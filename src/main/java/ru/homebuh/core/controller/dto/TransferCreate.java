@@ -1,10 +1,7 @@
 package ru.homebuh.core.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.OffsetDateTime;
 
@@ -12,23 +9,19 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-public class OperationCreate {
+@Builder
+public class TransferCreate {
     @JsonProperty("amount")
     private String amount;
+    @JsonProperty("expenseAccountId")
+    private Long expenseAccountId;
 
-    @JsonProperty("currencyCode")
-    private String currencyCode;
-
-    @JsonProperty("accountId")
-    private Long accountId;
-
-    @JsonProperty("categoryId")
-    private Long categoryId;
+    @JsonProperty("incomeAccountId")
+    private Long incomeAccountId;
 
     @JsonProperty("description")
     private String description;
 
     @JsonProperty("date")
     private OffsetDateTime date;
-
 }

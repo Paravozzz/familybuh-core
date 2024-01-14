@@ -39,7 +39,7 @@ public class OperationService {
      * @return доходная операция
      */
     @Transactional
-    public OperationDto expenseCreate(String userId, OperationCreate operationCreate) {
+    public OperationEntity createExpense(String userId, OperationCreate operationCreate) {
         UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
         AccountEntity userAccount = accountService.getAccount(operationCreate.getAccountId());
         final Long categoryId = operationCreate.getCategoryId();
@@ -56,9 +56,7 @@ public class OperationService {
         expenseOperation.setDate(operationCreate.getDate());
         expenseOperation.setUserInfo(userInfo);
 
-        expenseOperation = operationRepository.save(expenseOperation);
-
-        return operationMapper.mapToDto(expenseOperation);
+        return operationRepository.save(expenseOperation);
     }
 
     /**
@@ -69,7 +67,7 @@ public class OperationService {
      * @return доходная операция
      */
     @Transactional
-    public OperationDto incomeCreate(String userId, OperationCreate operationCreate) {
+    public OperationEntity createIncome(String userId, OperationCreate operationCreate) {
         UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
         AccountEntity userAccount = accountService.getAccount(operationCreate.getAccountId());
         final Long categoryId = operationCreate.getCategoryId();
@@ -86,9 +84,27 @@ public class OperationService {
         incomeOperation.setDate(operationCreate.getDate());
         incomeOperation.setUserInfo(userInfo);
 
-        incomeOperation = operationRepository.save(incomeOperation);
+        return operationRepository.save(incomeOperation);
+    }
 
-        return operationMapper.mapToDto(incomeOperation);
+    @Transactional
+    public OperationEntity createWithoutCategory(String userId, OperationCreate operationCreate, OperationTypeEnum operationType) {
+        if (operationType == OperationTypeEnum.EXPENSE || operationType == OperationTypeEnum.INCOME)
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "With operation types INCOME or EXPENSE use createIncome or createExpense!");
+
+        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
+        AccountEntity userAccount = accountService.getAccount(operationCreate.getAccountId());
+
+        OperationEntity incomeOperation = new OperationEntity();
+        incomeOperation.setCategory(null);
+        incomeOperation.setAmount(new BigDecimal(operationCreate.getAmount()));
+        incomeOperation.setAccount(userAccount);
+        incomeOperation.setOperationType(operationType);
+        incomeOperation.setDescription(operationCreate.getDescription());
+        incomeOperation.setDate(operationCreate.getDate());
+        incomeOperation.setUserInfo(userInfo);
+
+        return operationRepository.save(incomeOperation);
     }
 
     /**

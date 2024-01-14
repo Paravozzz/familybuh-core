@@ -8,17 +8,15 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.core.annotation.Order;
-import ru.homebuh.core.domain.enums.OperationTypeEnum;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "operation")
-public class OperationEntity {
+@Table(name = "transfer")
+public class TransferEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -27,42 +25,31 @@ public class OperationEntity {
     @JsonProperty("id")
     private Long id;
 
-    @Column(name = "amount", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "expense_operation_id", nullable = false)
     @Order(2)
-    @JsonProperty("amount")
-    private BigDecimal amount;
+    @JsonProperty("expense")
+    private OperationEntity expense;
 
     @ManyToOne
-    @JoinColumn(name = "account_id", nullable = false)
+    @JoinColumn(name = "income_operation_id", nullable = false)
     @Order(3)
-    @JsonProperty("account")
-    private AccountEntity account;
-
-    @Order(4)
-    @Column(name = "operation_type", nullable = false)
-    @Enumerated(EnumType.ORDINAL)
-    @JsonProperty("operationType")
-    private OperationTypeEnum operationType;
-
-    @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false)
-    @Order(5)
-    @JsonProperty("category")
-    private CategoryEntity category;
+    @JsonProperty("income")
+    private OperationEntity income;
 
     @Column(name = "description")
-    @Order(6)
+    @Order(4)
     @JsonProperty("description")
     private String description;
 
     @Column(name = "date", nullable = false)
-    @Order(7)
+    @Order(5)
     @JsonProperty("date")
     private OffsetDateTime date;
 
     @ManyToOne
     @JoinColumn(name = "user_info_id", nullable = false)
-    @Order(8)
+    @Order(6)
     @JsonIgnore
     private UserInfoEntity userInfo;
 }

@@ -8,14 +8,14 @@ spring:
     change-log: classpath:/db/changelog/changelog-master.xml
     enabled: true
   jpa:
-    show-sql: true
+    show-sql: false
     generate-ddl: false
     hibernate:
       ddl-auto: validate
     open-in-view: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         jdbc:
           time_zone: UTC
   datasource:

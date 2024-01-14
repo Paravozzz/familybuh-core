@@ -126,10 +126,9 @@
                 <constraints nullable="false"/>
             </column>
             <column name="category_id" type="bigint">
-                <constraints nullable="false" foreignKeyName="fk_operation_category" referencedTableName="category"
+                <constraints nullable="true" foreignKeyName="fk_operation_category" referencedTableName="category"
                              referencedColumnNames="id" deleteCascade="false"/>
             </column>
-            <column name="pair_id" type="uuid"/>
             <column name="description" type="varchar(255)">
                 <constraints nullable="true"/>
             </column>
@@ -178,8 +177,32 @@
             </column>
         </createTable>
 
-        <addPrimaryKey tableName="user_info_setting" columnNames="user_info_id, setting_id" constraintName="pk_user_info_setting"/>
+        <addPrimaryKey tableName="user_info_setting" columnNames="user_info_id, setting_id"
+                       constraintName="pk_user_info_setting"/>
 
+        <createTable tableName="transfer">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_transfer"/>
+            </column>
+            <column name="expense_operation_id" type="bigint" autoIncrement="false">
+                <constraints nullable="false" foreignKeyName="fk_expense_operation" referencedTableName="operation"
+                             referencedColumnNames="id"/>
+            </column>
+            <column name="income_operation_id" type="bigint" autoIncrement="false">
+                <constraints nullable="false" foreignKeyName="fk_income_operation" referencedTableName="operation"
+                             referencedColumnNames="id"/>
+            </column>
+            <column name="description" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="date" type="timestamptz" defaultOnNull="true" defaultValueComputed="${now}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_info_id" type="varchar(36)">
+                <constraints nullable="false" foreignKeyName="fk_transfer_user_info" referencedTableName="user_info"
+                             referencedColumnNames="id"/>
+            </column>
+        </createTable>
 
 
     </changeSet>

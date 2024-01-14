@@ -24,14 +24,14 @@ public class OperationController {
     OperationDto expenseCreate(
             final JwtAuthenticationToken token,
             @RequestBody OperationCreate operationCreate) {
-        return controllerServiceFacade.expenseCreate(token.getName(), operationCreate);
+        return controllerServiceFacade.createExpense(token.getName(), operationCreate);
     }
 
     @PostMapping("user/operation/income")
     OperationDto incomeCreate(
             final JwtAuthenticationToken token,
             @RequestBody OperationCreate operationCreate) {
-        return controllerServiceFacade.incomeCreate(token.getName(), operationCreate);
+        return controllerServiceFacade.createIncome(token.getName(), operationCreate);
     }
 
     @GetMapping("user/operations")
