@@ -16,6 +16,7 @@ import ru.homebuh.core.repository.TransferRepository;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 
 @Service
 @RequiredArgsConstructor
@@ -79,6 +80,10 @@ public class TransferService {
         TransferEntity newTransfer = new TransferEntity(null, expenseOperation, incomeOperation, description, date, userInfo);
 
         return transferRepository.save(newTransfer);
+    }
+
+    void deleteAllFamilyTransfers(Collection<String> familyIds) {
+        transferRepository.deleteAllByUserIdIn(familyIds);
     }
 
 }

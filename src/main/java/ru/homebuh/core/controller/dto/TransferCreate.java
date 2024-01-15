@@ -9,7 +9,6 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-@Builder
 public class TransferCreate {
     @JsonProperty("amount")
     private String amount;

@@ -10,5 +10,6 @@ import lombok.*;
 public class UserInfoCreate {
 
     private String id;
+    private Long familyId;
 
 }

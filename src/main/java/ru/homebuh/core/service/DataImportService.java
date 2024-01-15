@@ -46,7 +46,7 @@ public class DataImportService {
         //О Ч И С Т К А   П О Л Ь З О В А Т Е Л Ь С К И Х   Д А Н Н Ы Х
         List<UserInfoEntity> family = userInfoService.findAllFamilyMembers(userId);
         Set<String> familyIds = family.stream().map(UserInfoEntity::getId).collect(Collectors.toSet());
-        //TODO: удалить всё из transfer
+        transferService.deleteAllFamilyTransfers(familyIds);
         operationService.deleteAllFamilyOperations(familyIds);
         accountService.deleteAllFamilyAccounts(familyIds);
         family.forEach(userInfoEntity -> userInfoEntity.getCurrencies().clear());
@@ -114,7 +114,7 @@ public class DataImportService {
 
                         String accountName = getUniqueName(familyAccountNames, name);
 
-                        AccountSummary createdAccount = accountService.create(userId, AccountCreate.builder().name(accountName).build());
+                        AccountSummary createdAccount = accountService.create(userId, new AccountCreate(accountName, "", Collections.emptyList()));
 
                         familyAccountNames.add(accountName);
                 importedAccountsMap.put(importedAccountId, createdAccount);

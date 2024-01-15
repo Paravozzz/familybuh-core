@@ -70,7 +70,7 @@ public class InitService {
             userInfoEntity = userInfoService.getUserInfo(userId);
         } catch (ResponseStatusException e) {
             if (e.getStatusCode() == HttpStatusCode.valueOf(HttpStatus.NOT_FOUND.value()))
-                userInfoEntity = userInfoService.create(new UserInfoCreate(userId));
+                userInfoEntity = userInfoService.create(new UserInfoCreate(userId, null));
             else
                 throw e;
         }
@@ -90,16 +90,9 @@ public class InitService {
         if (userAccounts.isEmpty()) {
             Constants.INITIAL_ACCOUNTS.forEach(accountName -> {
                 Collection<AccountBalanceCreate> balances = new ArrayList<>(1);
-                AccountBalanceCreate balance = new AccountBalanceCreate();
-                balance.setAmount("0");
-                balance.setCurrencyCode(initCurrencyCode);
+                AccountBalanceCreate balance = new AccountBalanceCreate("0", initCurrencyCode);
                 balances.add(balance);
-                AccountCreate accountCreate = AccountCreate.builder()
-                        .name(accountName)
-                        .description("")
-                        .initialBalance(balances)
-                        .build();
-
+                AccountCreate accountCreate = new AccountCreate(accountName, "", balances);
                 accountService.create(userId, accountCreate);
             });
         }

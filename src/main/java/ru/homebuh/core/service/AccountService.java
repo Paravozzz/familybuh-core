@@ -129,10 +129,7 @@ public class AccountService {
         if (balances == null || balances.isEmpty()) {
             Set<String> userCurrencies = userInfo.getCurrencies().stream().map(CurrencyEntity::getCode).collect(Collectors.toSet());
             balances = userCurrencies.stream()
-                    .map(currencyCode -> AccountBalanceCreate.builder()
-                            .currencyCode(currencyCode)
-                            .amount("0")
-                            .build())
+                    .map(currencyCode -> new AccountBalanceCreate("0", currencyCode))
                     .toList();
         }
 

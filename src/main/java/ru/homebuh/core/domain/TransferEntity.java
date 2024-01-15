@@ -25,13 +25,13 @@ public class TransferEntity {
     @JsonProperty("id")
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "expense_operation_id", nullable = false)
     @Order(2)
     @JsonProperty("expense")
     private OperationEntity expense;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "income_operation_id", nullable = false)
     @Order(3)
     @JsonProperty("income")

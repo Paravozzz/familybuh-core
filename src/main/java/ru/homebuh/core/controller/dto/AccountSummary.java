@@ -9,7 +9,6 @@ import java.util.Collection;
 @AllArgsConstructor
 @Getter
 @Setter
-@Builder
 public class AccountSummary {
 
     @JsonProperty("name")

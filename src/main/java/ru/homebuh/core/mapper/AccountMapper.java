@@ -27,13 +27,7 @@ public abstract class AccountMapper {
             return null;
         AccountEntity account = accounts.stream().findFirst().orElseThrow(notFoundByIdExceptionSupplier());
 
-        AccountSummary summary = new AccountSummary();
-        summary.setDescription(account.getDescription()); //NOSONAR
-        summary.setName(account.getName()); //NOSONAR
-
-        summary.setInitialBalance(accounts.stream().map(this::map).toList());
-
-        return summary;
+        return new AccountSummary(account.getName(), account.getDescription(), accounts.stream().map(this::map).toList());
     }
 
     public static Supplier<ResponseStatusException> notFoundByIdExceptionSupplier() {

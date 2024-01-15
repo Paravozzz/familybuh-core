@@ -7,7 +7,6 @@ import lombok.*;
 @AllArgsConstructor
 @Getter
 @Setter
-@Builder
 public class AccountBalance {
     @JsonProperty("accountId")
     private Long accountId;
