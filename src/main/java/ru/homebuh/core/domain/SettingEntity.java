@@ -15,7 +15,8 @@ import org.springframework.core.annotation.Order;
 @NoArgsConstructor
 public class SettingEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "setting_id_seq")
+    @SequenceGenerator(name = "setting_id_seq", sequenceName = "setting_id_seq", allocationSize = 1)
     @Column(name = "id", nullable = false)
     @Order(1)
     @EqualsAndHashCode.Exclude

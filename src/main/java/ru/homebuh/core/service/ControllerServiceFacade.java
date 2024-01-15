@@ -4,10 +4,7 @@ import com.querydsl.core.types.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.homebuh.core.controller.dto.*;
-import ru.homebuh.core.domain.AccountEntity;
-import ru.homebuh.core.domain.CategoryEntity;
-import ru.homebuh.core.domain.CurrencyEntity;
-import ru.homebuh.core.domain.OperationEntity;
+import ru.homebuh.core.domain.*;
 import ru.homebuh.core.domain.enums.OperationTypeEnum;
 import ru.homebuh.core.mapper.OperationMapper;
 
@@ -26,13 +23,15 @@ public class ControllerServiceFacade {
     private final SettingService settingService;
     private final AuthorizationService authorizationService;
     private final OperationMapper operationMapper;
+    private final UserInfoService userInfoService;
 
     public Collection<AccountEntity> findAllFamilyAccountsByUserId(String userId) {
         return accountService.findAllFamilyAccountsByUserId(userId);
     }
 
     public AccountSummary createAccount(String userId, AccountCreate accountCreate) {
-        return accountService.create(userId, accountCreate);
+        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
+        return accountService.create(userInfo, accountCreate);
     }
 
     public AccountSummary updateAccount(String userId, AccountUpdate accountUpdate) {
@@ -63,7 +62,8 @@ public class ControllerServiceFacade {
     }
 
     public CategoryEntity createCategory(String userId, CategoryCreate categoryCreate) {
-        return categoryService.create(userId, categoryCreate);
+        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
+        return categoryService.create(userInfo, categoryCreate);
     }
 
     public CategoryEntity updateCategory(String userId, Long categoryId, CategoryUpdate categoryUpdate) {
@@ -101,12 +101,14 @@ public class ControllerServiceFacade {
     }
 
     public OperationDto createExpense(String userId, OperationCreate operationCreate) {
-        OperationEntity expense = operationService.createExpense(userId, operationCreate);
+        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
+        OperationEntity expense = operationService.createExpense(userInfo, operationCreate);
         return operationMapper.mapToDto(expense);
     }
 
     public OperationDto createIncome(String userId, OperationCreate operationCreate) {
-        OperationEntity income = operationService.createIncome(userId, operationCreate);
+        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
+        OperationEntity income = operationService.createIncome(userInfo, operationCreate);
         return operationMapper.mapToDto(income);
     }
 

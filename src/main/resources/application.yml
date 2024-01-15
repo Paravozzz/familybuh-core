@@ -15,9 +15,13 @@ spring:
     open-in-view: false
     properties:
       hibernate:
+        order_inserts: true
         format_sql: false
         jdbc:
           time_zone: UTC
+          batch_size: 50
+        order_updates: true
+        batch_versioned_data: true
   datasource:
     url: jdbc:postgresql://localhost:5432/familybuh
     username: postgres

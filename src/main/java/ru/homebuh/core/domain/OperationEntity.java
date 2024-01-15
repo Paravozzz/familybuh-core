@@ -20,7 +20,8 @@ import java.time.OffsetDateTime;
 @Table(name = "operation")
 public class OperationEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "operation_id_seq")
+    @SequenceGenerator(name = "operation_id_seq", sequenceName = "operation_id_seq", allocationSize = 1)
     @Column(name = "id", nullable = false)
     @Order(1)
     @EqualsAndHashCode.Exclude

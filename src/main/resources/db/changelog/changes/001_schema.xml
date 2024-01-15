@@ -10,30 +10,44 @@
 
     <changeSet id="001" author="admin" labels="schema">
         <preConditions onFail="HALT">
-            <not>
-                <tableExists tableName="currency"/>
-            </not>
-            <not>
-                <tableExists tableName="family"/>
-            </not>
-            <not>
-                <tableExists tableName="user_info"/>
-            </not>
-            <not>
-                <tableExists tableName="user_info_currency"/>
-            </not>
-            <not>
-                <tableExists tableName="account"/>
-            </not>
-            <not>
-                <tableExists tableName="category"/>
-            </not>
-            <not>
-                <tableExists tableName="operation"/>
-            </not>
-        <not>
-                <tableExists tableName="setting"/>
-            </not>
+            <and>
+                <not>
+                    <tableExists tableName="currency"/>
+                </not>
+                <not>
+                    <tableExists tableName="family"/>
+                </not>
+                <not>
+                    <tableExists tableName="user_info"/>
+                </not>
+                <not>
+                    <tableExists tableName="user_info_currency"/>
+                </not>
+                <not>
+                    <tableExists tableName="user_info_category"/>
+                </not>
+                <not>
+                    <tableExists tableName="user_info_setting"/>
+                </not>
+                <not>
+                    <tableExists tableName="account"/>
+                </not>
+                <not>
+                    <tableExists tableName="category"/>
+                </not>
+                <not>
+                    <tableExists tableName="operation"/>
+                </not>
+                <not>
+                    <tableExists tableName="transfer"/>
+                </not>
+                <not>
+                    <tableExists tableName="exchange"/>
+                </not>
+                <not>
+                    <tableExists tableName="setting"/>
+                </not>
+            </and>
         </preConditions>
         <createTable tableName="currency">
             <column name="id" type="varchar(3)">
@@ -48,10 +62,11 @@
         </createTable>
 
         <createTable tableName="family">
-            <column name="id" type="bigint" autoIncrement="true">
+            <column name="id" type="bigint" autoIncrement="false" valueSequenceNext="family_id_seq">
                 <constraints primaryKey="true" nullable="false" primaryKeyName="pk_family"/>
             </column>
         </createTable>
+        <createSequence sequenceName="family_id_seq" incrementBy="1" startValue="1000000000"/>
 
         <createTable tableName="user_info">
             <column name="id" type="varchar(36)" autoIncrement="false">
@@ -77,7 +92,7 @@
         <addPrimaryKey tableName="user_info_currency" columnNames="user_info_id, currency_id" constraintName="pk_user_info_currency"/>
 
         <createTable tableName="account">
-            <column name="id" type="bigint" autoIncrement="true">
+            <column name="id" type="bigint" autoIncrement="false" valueSequenceNext="account_id_seq">
                 <constraints primaryKey="true" nullable="false" primaryKeyName="pk_account"/>
             </column>
             <column name="name" type="varchar(255)">
@@ -98,9 +113,10 @@
         </createTable>
 
         <addUniqueConstraint tableName="account" columnNames="name, currency_id, user_info_id"/>
+        <createSequence sequenceName="account_id_seq" incrementBy="1" startValue="2000000000"/>
 
         <createTable tableName="category">
-            <column name="id" type="bigint" autoIncrement="true">
+            <column name="id" type="bigint" autoIncrement="false" valueSequenceNext="category_id_seq">
                 <constraints primaryKey="true" nullable="false" primaryKeyName="pk_category"/>
             </column>
             <column name="name" type="varchar(255)">
@@ -111,8 +127,10 @@
             </column>
         </createTable>
 
+        <createSequence sequenceName="category_id_seq" incrementBy="1" startValue="3000000000"/>
+
         <createTable tableName="operation">
-            <column name="id" type="bigint" autoIncrement="true">
+            <column name="id" type="bigint" autoIncrement="false" valueSequenceNext="operation_id_seq">
                 <constraints primaryKey="true" nullable="false" primaryKeyName="pk_operation"/>
             </column>
             <column name="amount" type="numeric(38, 2)">
@@ -141,6 +159,8 @@
             </column>
         </createTable>
 
+        <createSequence sequenceName="operation_id_seq" incrementBy="1" startValue="1"/>
+
         <createTable tableName="user_info_category">
             <column name="user_info_id" type="varchar(36)" autoIncrement="false">
                 <constraints nullable="false" foreignKeyName="fk_user_info" referencedTableName="user_info"
@@ -155,7 +175,7 @@
         <addPrimaryKey tableName="user_info_category" columnNames="user_info_id, category_id" constraintName="pk_user_info_category"/>
 
         <createTable tableName="setting">
-            <column name="id" type="bigint" autoIncrement="true">
+            <column name="id" type="bigint" autoIncrement="false" valueSequenceNext="setting_id_seq">
                 <constraints primaryKey="true" nullable="false" primaryKeyName="pk_setting"/>
             </column>
             <column name="name" type="varchar(255)">
@@ -165,6 +185,8 @@
                 <constraints nullable="true"/>
             </column>
         </createTable>
+
+        <createSequence sequenceName="setting_id_seq" incrementBy="1" startValue="4000000000"/>
 
         <createTable tableName="user_info_setting">
             <column name="user_info_id" type="varchar(36)" autoIncrement="false">
@@ -181,7 +203,7 @@
                        constraintName="pk_user_info_setting"/>
 
         <createTable tableName="transfer">
-            <column name="id" type="bigint" autoIncrement="true">
+            <column name="id" type="bigint" autoIncrement="false" valueSequenceNext="transfer_id_seq">
                 <constraints primaryKey="true" nullable="false" primaryKeyName="pk_transfer"/>
             </column>
             <column name="expense_operation_id" type="bigint" autoIncrement="false">
@@ -204,6 +226,33 @@
             </column>
         </createTable>
 
+        <createSequence sequenceName="transfer_id_seq" incrementBy="1" startValue="5000000000"/>
+
+        <createTable tableName="exchange">
+            <column name="id" type="bigint" autoIncrement="false" valueSequenceNext="exchange_id_seq">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_exchange"/>
+            </column>
+            <column name="expense_operation_id" type="bigint" autoIncrement="false">
+                <constraints nullable="false" foreignKeyName="fk_expense_operation" referencedTableName="operation"
+                             referencedColumnNames="id"/>
+            </column>
+            <column name="income_operation_id" type="bigint" autoIncrement="false">
+                <constraints nullable="false" foreignKeyName="fk_income_operation" referencedTableName="operation"
+                             referencedColumnNames="id"/>
+            </column>
+            <column name="description" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="date" type="timestamptz" defaultOnNull="true" defaultValueComputed="${now}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_info_id" type="varchar(36)">
+                <constraints nullable="false" foreignKeyName="fk_exchange_user_info" referencedTableName="user_info"
+                             referencedColumnNames="id"/>
+            </column>
+        </createTable>
+
+        <createSequence sequenceName="exchange_id_seq" incrementBy="1" startValue="6000000000"/>
 
     </changeSet>
 </databaseChangeLog>

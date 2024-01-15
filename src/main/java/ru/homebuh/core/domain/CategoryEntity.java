@@ -12,7 +12,8 @@ import org.springframework.core.annotation.Order;
 @Table(name = "category")
 public class CategoryEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "category_id_seq")
+    @SequenceGenerator(name = "category_id_seq", sequenceName = "category_id_seq", allocationSize = 1)
     @Column(name = "id", nullable = false)
     @Order(1)
     @EqualsAndHashCode.Exclude

@@ -34,13 +34,12 @@ public class OperationService {
     /**
      * Доходная операция
      *
-     * @param userId          идентификатор пользователя
+     * @param userInfo          идентификатор пользователя
      * @param operationCreate данные
      * @return доходная операция
      */
     @Transactional
-    public OperationEntity createExpense(String userId, OperationCreate operationCreate) {
-        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
+    public OperationEntity createExpense(UserInfoEntity userInfo, OperationCreate operationCreate) {
         AccountEntity userAccount = accountService.getAccount(operationCreate.getAccountId());
         final Long categoryId = operationCreate.getCategoryId();
         CategoryEntity category = categoryService.getCategory(categoryId);
@@ -62,13 +61,12 @@ public class OperationService {
     /**
      * Доходная операция
      *
-     * @param userId          идентификатор пользователя
+     * @param userInfo          идентификатор пользователя
      * @param operationCreate данные
      * @return доходная операция
      */
     @Transactional
-    public OperationEntity createIncome(String userId, OperationCreate operationCreate) {
-        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
+    public OperationEntity createIncome(UserInfoEntity userInfo, OperationCreate operationCreate) {
         AccountEntity userAccount = accountService.getAccount(operationCreate.getAccountId());
         final Long categoryId = operationCreate.getCategoryId();
         CategoryEntity category = categoryService.getCategory(categoryId);
@@ -88,11 +86,10 @@ public class OperationService {
     }
 
     @Transactional
-    public OperationEntity createWithoutCategory(String userId, OperationCreate operationCreate, OperationTypeEnum operationType) {
+    public OperationEntity createWithoutCategory(UserInfoEntity userInfo, OperationCreate operationCreate, OperationTypeEnum operationType) {
         if (operationType == OperationTypeEnum.EXPENSE || operationType == OperationTypeEnum.INCOME)
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "With operation types INCOME or EXPENSE use createIncome or createExpense!");
 
-        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
         AccountEntity userAccount = accountService.getAccount(operationCreate.getAccountId());
 
         OperationEntity incomeOperation = new OperationEntity();

@@ -65,15 +65,17 @@ public class InitService {
     @Transactional
     public void initUser(String userId, InitCreate initCreate) {
         //1. Пользователь должен существовать
-        UserInfoEntity userInfoEntity;
+        final UserInfoEntity userInfoEntity;
+        UserInfoEntity userInfoEntityTemp;
         try {
-            userInfoEntity = userInfoService.getUserInfo(userId);
+            userInfoEntityTemp = userInfoService.getUserInfo(userId);
         } catch (ResponseStatusException e) {
             if (e.getStatusCode() == HttpStatusCode.valueOf(HttpStatus.NOT_FOUND.value()))
-                userInfoEntity = userInfoService.create(new UserInfoCreate(userId, null));
+                userInfoEntityTemp = userInfoService.create(new UserInfoCreate(userId, null));
             else
                 throw e;
         }
+        userInfoEntity = userInfoEntityTemp;
 
         //2. У пользователя должна быть задана хотя бы одна валюта
         final String initCurrencyCode = initCreate.getCurrencyCode();
@@ -93,7 +95,7 @@ public class InitService {
                 AccountBalanceCreate balance = new AccountBalanceCreate("0", initCurrencyCode);
                 balances.add(balance);
                 AccountCreate accountCreate = new AccountCreate(accountName, "", balances);
-                accountService.create(userId, accountCreate);
+                accountService.create(userInfoEntity, accountCreate);
             });
         }
 
@@ -102,7 +104,7 @@ public class InitService {
         if (expCategories.isEmpty()) {
             Constants.INITIAL_EXPENSE_CATEGORIES.forEach(categoryName -> {
                 CategoryCreate categoryCreate = new CategoryCreate(categoryName, false);
-                categoryService.create(userId, categoryCreate);
+                categoryService.create(userInfoEntity, categoryCreate);
             });
         }
 
@@ -111,7 +113,7 @@ public class InitService {
         if (incCategories.isEmpty()) {
             Constants.INITIAL_INCOME_CATEGORIES.forEach(categoryName -> {
                 CategoryCreate categoryCreate = new CategoryCreate(categoryName, true);
-                categoryService.create(userId, categoryCreate);
+                categoryService.create(userInfoEntity, categoryCreate);
             });
         }
     }

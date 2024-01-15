@@ -16,8 +16,9 @@ import org.springframework.core.annotation.Order;
 public class FamilyEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", columnDefinition = "bigint NOT NULL")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "family_id_seq")
+    @SequenceGenerator(name = "family_id_seq", sequenceName = "family_id_seq", allocationSize = 1)
+    @Column(name = "id", nullable = false)
     @Order(1)
     @JsonProperty("id")
     private Long id;

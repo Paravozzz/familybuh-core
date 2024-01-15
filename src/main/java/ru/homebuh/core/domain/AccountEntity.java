@@ -18,7 +18,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class AccountEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_id_seq")
+    @SequenceGenerator(name = "account_id_seq", sequenceName = "account_id_seq", allocationSize = 1)
     @Column(name="id", nullable = false)
     @Order(1)
     @EqualsAndHashCode.Exclude

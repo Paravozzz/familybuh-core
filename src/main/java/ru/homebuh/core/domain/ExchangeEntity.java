@@ -15,11 +15,11 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "transfer")
-public class TransferEntity {
+@Table(name = "exchange")
+public class ExchangeEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "transfer_id_seq")
-    @SequenceGenerator(name = "transfer_id_seq", sequenceName = "transfer_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "exchange_id_seq")
+    @SequenceGenerator(name = "exchange_id_seq", sequenceName = "exchange_id_seq", allocationSize = 1)
     @Column(name = "id", nullable = false)
     @Order(1)
     @EqualsAndHashCode.Exclude

@@ -25,18 +25,16 @@ public class TransferService {
     private final OperationService operationService;
     private final TransferRepository transferRepository;
     private final AccountService accountService;
-    private final UserInfoService userInfoService;
 
     /**
      * Операция перемещение
      *
-     * @param userId         идентификатор пользователя
+     * @param userInfo       идентификатор пользователя
      * @param transferCreate данные
      * @return Операция перемещение
      */
     @Transactional
-    public TransferEntity transferCreate(String userId, TransferCreate transferCreate) {
-        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
+    public TransferEntity transferCreate(UserInfoEntity userInfo, TransferCreate transferCreate) {
 
         AccountEntity expenseAccount = accountService.getAccount(transferCreate.getExpenseAccountId());
         AccountEntity incomeAccount = accountService.getAccount(transferCreate.getIncomeAccountId());
@@ -57,14 +55,14 @@ public class TransferService {
 
         OperationCreate expenseCreate = new OperationCreate(
                 amount.abs().negate().toString(),
-                incomeCurrencyCode,
+                expenseCurrencyCode,
                 expenseAccount.getId(),
                 null,
                 description,
                 date
         );
 
-        OperationEntity expenseOperation = operationService.createWithoutCategory(userId, expenseCreate, OperationTypeEnum.TRANSFER);
+        OperationEntity expenseOperation = operationService.createWithoutCategory(userInfo, expenseCreate, OperationTypeEnum.TRANSFER);
 
         OperationCreate incomeCreate = new OperationCreate(
                 amount.abs().toString(),
@@ -75,14 +73,15 @@ public class TransferService {
                 date
         );
 
-        OperationEntity incomeOperation = operationService.createWithoutCategory(userId, incomeCreate, OperationTypeEnum.TRANSFER);
+        OperationEntity incomeOperation = operationService.createWithoutCategory(userInfo, incomeCreate, OperationTypeEnum.TRANSFER);
 
         TransferEntity newTransfer = new TransferEntity(null, expenseOperation, incomeOperation, description, date, userInfo);
 
         return transferRepository.save(newTransfer);
     }
 
-    void deleteAllFamilyTransfers(Collection<String> familyIds) {
+    @Transactional
+    public void deleteAllFamilyTransfers(Collection<String> familyIds) {
         transferRepository.deleteAllByUserIdIn(familyIds);
     }
 

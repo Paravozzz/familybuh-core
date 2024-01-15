@@ -108,13 +108,13 @@ public class AccountService {
     /**
      * Создать новый счёт
      *
-     * @param userId        идентификатор пользователя
+     * @param userInfo        идентификатор пользователя
      * @param accountCreate данные для создания счёта
      * @return обобщённая информация о счёте
      */
     @Transactional
-    public AccountSummary create(String userId, AccountCreate accountCreate) {
-        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
+    public AccountSummary create(UserInfoEntity userInfo, AccountCreate accountCreate) {
+        String userId = userInfo.getId();
 
         //Проверить, что у семьи не существует счетов с таким именем
         List<UserInfoEntity> allFamilyMembers = userInfoService.findAllFamilyMembers(userId);

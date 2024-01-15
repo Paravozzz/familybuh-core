@@ -76,14 +76,13 @@ public class CategoryService {
     /**
      * Создать новую категорию у определённого пользователя
      *
-     * @param userInfoId     идентификатор пользователя
+     * @param userInfo       идентификатор пользователя
      * @param categoryCreate данные для создания категории
      * @return созданную категорию
      */
     @Transactional
-    public CategoryEntity create(String userInfoId, CategoryCreate categoryCreate) {
+    public CategoryEntity create(UserInfoEntity userInfo, CategoryCreate categoryCreate) {
         CategoryEntity newCategory = categoryMapper.map(categoryCreate);
-        UserInfoEntity userInfo = userInfoService.getUserInfo(userInfoId);
 
         List<CategoryEntity> categories = userInfo.getCategories();
         if (categories.contains(newCategory)) {
