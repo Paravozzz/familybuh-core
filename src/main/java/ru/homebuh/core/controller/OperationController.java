@@ -44,11 +44,11 @@ public class OperationController {
     }
 
     @GetMapping("user/operations/daily")
-    Collection<OperationDto> dailyOperation(
+    Collection<OperationDto> dailyOperations(
             final JwtAuthenticationToken token,
             @RequestParam(required = true) Integer operationType,
             @RequestParam(required = true) OffsetDateTime date
             ) {
-        return controllerServiceFacade.dailyOperation(token.getName(), OperationTypeEnum.values()[operationType], date);
+        return controllerServiceFacade.dailyOperations(token.getName(), OperationTypeEnum.values()[operationType], date);
     }
 }

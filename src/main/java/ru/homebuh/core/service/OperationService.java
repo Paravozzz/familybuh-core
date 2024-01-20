@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ru.homebuh.core.controller.dto.OperationCreate;
-import ru.homebuh.core.controller.dto.OperationDto;
 import ru.homebuh.core.domain.*;
 import ru.homebuh.core.domain.enums.OperationTypeEnum;
 import ru.homebuh.core.mapper.OperationMapper;
@@ -18,8 +17,10 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
@@ -112,7 +113,7 @@ public class OperationService {
      * @return
      */
     @Transactional
-    public Collection<OperationDto> findByPredicate(String userId, Predicate predicate) {
+    public List<OperationEntity> findByPredicate(String userId, Predicate predicate) {
         if (predicate == null || predicate.equals(new BooleanBuilder()))
             return new ArrayList<>();
 
@@ -120,7 +121,7 @@ public class OperationService {
 
         Iterable<OperationEntity> result = operationRepository.findAll(booleanBuilder);
 
-        return operationMapper.mapToDto(result);
+        return StreamSupport.stream(result.spliterator(), false).toList();
     }
 
     /**
@@ -132,7 +133,7 @@ public class OperationService {
      * @return
      */
     @Transactional
-    public Collection<OperationDto> familyDailyOperations(String userId, OperationTypeEnum operationType, OffsetDateTime date) {
+    public List<OperationEntity> familyDailyOperations(String userId, OperationTypeEnum operationType, OffsetDateTime date) {
 
         BooleanBuilder booleanBuilder = securePredicate(userId, new BooleanBuilder());
 
@@ -144,7 +145,7 @@ public class OperationService {
 
         Iterable<OperationEntity> result = operationRepository.findAll(booleanBuilder);
 
-        return operationMapper.mapToDto(result);
+        return StreamSupport.stream(result.spliterator(), false).toList();
     }
 
     @Transactional

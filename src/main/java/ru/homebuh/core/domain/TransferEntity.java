@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.springframework.core.annotation.Order;
 
 import java.time.OffsetDateTime;
@@ -26,13 +28,15 @@ public class TransferEntity {
     @JsonProperty("id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @NotFound(action = NotFoundAction.IGNORE)
     @JoinColumn(name = "expense_operation_id", nullable = false)
     @Order(2)
     @JsonProperty("expense")
     private OperationEntity expense;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @NotFound(action = NotFoundAction.IGNORE)
     @JoinColumn(name = "income_operation_id", nullable = false)
     @Order(3)
     @JsonProperty("income")

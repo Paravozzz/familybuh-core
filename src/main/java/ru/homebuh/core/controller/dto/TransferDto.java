@@ -12,14 +12,21 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-public class TransferCreate {
+public class TransferDto {
+    @JsonProperty("id")
+    private Long transferId;
+
     @JsonProperty("amount")
     private String amount;
-    @JsonProperty("expenseAccountId")
-    private Long expenseAccountId;
 
-    @JsonProperty("incomeAccountId")
-    private Long incomeAccountId;
+    @JsonProperty("currencyCode")
+    private String currencyCode;
+
+    @JsonProperty("expenseAccountName")
+    private String expenseAccountName;
+
+    @JsonProperty("incomeAccountName")
+    private String incomeAccountName;
 
     @JsonProperty("description")
     private String description;

@@ -7,9 +7,11 @@ import ru.homebuh.core.controller.dto.*;
 import ru.homebuh.core.domain.*;
 import ru.homebuh.core.domain.enums.OperationTypeEnum;
 import ru.homebuh.core.mapper.OperationMapper;
+import ru.homebuh.core.mapper.TransferMapper;
 
 import java.time.OffsetDateTime;
 import java.util.Collection;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,8 @@ public class ControllerServiceFacade {
     private final AuthorizationService authorizationService;
     private final OperationMapper operationMapper;
     private final UserInfoService userInfoService;
+    private final TransferService transferService;
+    private final TransferMapper transferMapper;
 
     public Collection<AccountEntity> findAllFamilyAccountsByUserId(String userId) {
         return accountService.findAllFamilyAccountsByUserId(userId);
@@ -113,11 +117,13 @@ public class ControllerServiceFacade {
     }
 
     public Collection<OperationDto> findOperationsByPredicate(String userId, Predicate predicate) {
-        return operationService.findByPredicate(userId, predicate);
+        List<OperationEntity> operations = operationService.findByPredicate(userId, predicate);
+        return operationMapper.mapToDto(operations);
     }
 
-    public Collection<OperationDto> dailyOperation(String userId, OperationTypeEnum operationType, OffsetDateTime date) {
-        return operationService.familyDailyOperations(userId, operationType, date);
+    public Collection<OperationDto> dailyOperations(String userId, OperationTypeEnum operationType, OffsetDateTime date) {
+        List<OperationEntity> operations = operationService.familyDailyOperations(userId, operationType, date);
+        return operationMapper.mapToDto(operations);
     }
 
     public SettingDto findUserSettingByName(String userId, String name) {
@@ -126,5 +132,21 @@ public class ControllerServiceFacade {
 
     public SettingDto saveSetting(String userId, SettingCreate settingCreate) {
         return settingService.save(userId, settingCreate);
+    }
+
+    public TransferDto createTransfer(String userId, TransferCreate transferCreate) {
+        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
+        TransferEntity transferEntity = transferService.transferCreate(userInfo, transferCreate);
+        return transferMapper.mapToDto(transferEntity);
+    }
+
+    public Collection<TransferDto> findTransfersByPredicate(String userId, Predicate predicate) {
+        Collection<TransferEntity> transfers = transferService.findByPredicate(userId, predicate);
+        return transferMapper.mapToDto(transfers);
+    }
+
+    public Collection<TransferDto> dailyTransfers(String userId, OffsetDateTime date) {
+        Collection<TransferEntity> transfers = transferService.findDailyTransfers(userId, date);
+        return transferMapper.mapToDto(transfers);
     }
 }

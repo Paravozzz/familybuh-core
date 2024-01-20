@@ -1,10 +1,10 @@
-package ru.homebuh.core.service;
+package ru.homebuh.core;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
+import ru.homebuh.core.service.DataImportService;
 
-@Component
+//@Component
 public class CommandLineAppStartupRunner implements CommandLineRunner {
 
     @Autowired
