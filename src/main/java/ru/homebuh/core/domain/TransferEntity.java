@@ -28,14 +28,14 @@ public class TransferEntity {
     @JsonProperty("id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @NotFound(action = NotFoundAction.IGNORE)
     @JoinColumn(name = "expense_operation_id", nullable = false)
     @Order(2)
     @JsonProperty("expense")
     private OperationEntity expense;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @NotFound(action = NotFoundAction.IGNORE)
     @JoinColumn(name = "income_operation_id", nullable = false)
     @Order(3)
