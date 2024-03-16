@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.homebuh.core.controller.dto.*;
 import ru.homebuh.core.domain.*;
 import ru.homebuh.core.domain.enums.OperationTypeEnum;
+import ru.homebuh.core.mapper.ExchangeMapper;
 import ru.homebuh.core.mapper.OperationMapper;
 import ru.homebuh.core.mapper.TransferMapper;
 
@@ -28,6 +29,8 @@ public class ControllerServiceFacade {
     private final UserInfoService userInfoService;
     private final TransferService transferService;
     private final TransferMapper transferMapper;
+    private final ExchangeService exchangeService;
+    private final ExchangeMapper exchangeMapper;
 
     public Collection<AccountEntity> findAllFamilyAccountsByUserId(String userId) {
         return accountService.findAllFamilyAccountsByUserId(userId);
@@ -148,5 +151,21 @@ public class ControllerServiceFacade {
     public Collection<TransferDto> dailyTransfers(String userId, OffsetDateTime date) {
         Collection<TransferEntity> transfers = transferService.findDailyTransfers(userId, date);
         return transferMapper.mapToDto(transfers);
+    }
+
+    public ExchangeDto createExchange(String userId, ExchangeCreate exchangeCreate) {
+        UserInfoEntity userInfo = userInfoService.getUserInfo(userId);
+        ExchangeEntity exchange = exchangeService.exchangeCreate(userInfo, exchangeCreate);
+        return exchangeMapper.mapToDto(exchange);
+    }
+
+    public Collection<ExchangeDto> findExchangesByPredicate(String userId, Predicate predicate) {
+        Collection<ExchangeEntity> transfers = exchangeService.findByPredicate(userId, predicate);
+        return exchangeMapper.mapToDto(transfers);
+    }
+
+    public Collection<ExchangeDto> dailyExchanges(String userId, OffsetDateTime date) {
+        Collection<ExchangeEntity> exchanges = exchangeService.findDailyExchanges(userId, date);
+        return exchangeMapper.mapToDto(exchanges);
     }
 }
