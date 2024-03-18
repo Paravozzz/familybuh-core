@@ -8,7 +8,6 @@ import lombok.Setter;
 import ru.homebuh.core.domain.enums.OperationTypeEnum;
 
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,8 +21,8 @@ public class OperationDto {
     @JsonProperty("amount")
     private String amount;
 
-    @JsonProperty("currencyCode")
-    private String currencyCode;
+    @JsonProperty("currency")
+    private CurrencyDto currency;
 
     @JsonProperty("accountId")
     private Long accountId;

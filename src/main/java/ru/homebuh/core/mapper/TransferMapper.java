@@ -14,7 +14,7 @@ public interface TransferMapper {
 
     @Mapping(target = "transferId", source = "id")
     @Mapping(target = "amount", source = "income.amount")
-    @Mapping(target = "currencyCode", source = "expense.account.currency.code")
+    @Mapping(target = "currency", source = "expense.account.currency")
     @Mapping(target = "expenseAccountName", source = "expense.account.name")
     @Mapping(target = "incomeAccountName", source = "income.account.name")
     TransferDto mapToDto(TransferEntity source);

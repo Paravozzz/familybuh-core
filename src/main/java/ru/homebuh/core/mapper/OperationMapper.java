@@ -13,7 +13,7 @@ import java.util.List;
 public interface OperationMapper {
 
     @Mapping(target = "operationId", source = "id")
-    @Mapping(target = "currencyCode", source = "account.currency.code")
+    @Mapping(target = "currency", source = "account.currency")
     @Mapping(target = "accountId", source = "account.id")
     @Mapping(target = "category", source = "category.name")
     OperationDto mapToDto(OperationEntity source);

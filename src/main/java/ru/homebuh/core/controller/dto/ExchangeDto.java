@@ -24,11 +24,11 @@ public class ExchangeDto {
     @JsonProperty("accountName")
     private String accountName;
 
-    @JsonProperty("expenseCurrencyCode")
-    private String expenseCurrencyCode;
+    @JsonProperty("expenseCurrency")
+    private CurrencyDto expenseCurrency;
 
-    @JsonProperty("incomeCurrencyCode")
-    private String incomeCurrencyCode;
+    @JsonProperty("incomeCurrency")
+    private CurrencyDto incomeCurrency;
 
     @JsonProperty("description")
     private String description;

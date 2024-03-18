@@ -19,8 +19,8 @@ public class TransferDto {
     @JsonProperty("amount")
     private String amount;
 
-    @JsonProperty("currencyCode")
-    private String currencyCode;
+    @JsonProperty("currency")
+    private CurrencyDto currency;
 
     @JsonProperty("expenseAccountName")
     private String expenseAccountName;

@@ -15,8 +15,8 @@ public interface ExchangeMapper {
     @Mapping(target = "exchangeId", source = "id")
     @Mapping(target = "incomeAmount", source = "income.amount")
     @Mapping(target = "expenseAmount", source = "expense.amount")
-    @Mapping(target = "incomeCurrencyCode", source = "income.account.currency.code")
-    @Mapping(target = "expenseCurrencyCode", source = "expense.account.currency.code")
+    @Mapping(target = "incomeCurrency", source = "income.account.currency")
+    @Mapping(target = "expenseCurrency", source = "expense.account.currency")
     @Mapping(target = "accountName", source = "expense.account.name")
     ExchangeDto mapToDto(ExchangeEntity source);
 
