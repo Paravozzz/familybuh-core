@@ -12,7 +12,7 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-public class OperationCreate {
+public class OperationUpdate {
     @JsonProperty("amount")
     private String amount;
 

@@ -60,7 +60,6 @@ public class TransferService {
 
         OperationCreate expenseCreate = new OperationCreate(
                 amount.abs().negate().toString(),
-                expenseCurrencyCode,
                 expenseAccount.getId(),
                 null,
                 description,
@@ -71,7 +70,6 @@ public class TransferService {
 
         OperationCreate incomeCreate = new OperationCreate(
                 amount.abs().toString(),
-                incomeCurrencyCode,
                 incomeAccount.getId(),
                 null,
                 description,

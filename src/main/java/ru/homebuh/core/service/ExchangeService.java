@@ -60,7 +60,6 @@ public class ExchangeService {
 
         OperationCreate expenseCreate = new OperationCreate(
                 expenseAmount.abs().negate().toString(),
-                expenseCurrencyCode,
                 expenseAccount.getId(),
                 null,
                 description,
@@ -71,7 +70,6 @@ public class ExchangeService {
 
         OperationCreate incomeCreate = new OperationCreate(
                 incomeAmount.abs().toString(),
-                incomeCurrencyCode,
                 incomeAccount.getId(),
                 null,
                 description,

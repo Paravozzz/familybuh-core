@@ -27,8 +27,14 @@ public class OperationDto {
     @JsonProperty("accountId")
     private Long accountId;
 
+    @JsonProperty("accountName")
+    private String accountName;
+
     @JsonProperty("operationType")
     private OperationTypeEnum operationType;
+
+    @JsonProperty("categoryId")
+    private Long categoryId;
 
     @JsonProperty("category")
     private String category;

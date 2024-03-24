@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.*;
 import ru.homebuh.core.controller.dto.OperationCreate;
 import ru.homebuh.core.controller.dto.OperationDto;
+import ru.homebuh.core.controller.dto.OperationUpdate;
 import ru.homebuh.core.domain.OperationEntity;
 import ru.homebuh.core.domain.enums.OperationTypeEnum;
 import ru.homebuh.core.service.ControllerServiceFacade;
@@ -19,6 +20,18 @@ import java.util.Collection;
 @RequestMapping("api")
 public class OperationController {
     private final ControllerServiceFacade controllerServiceFacade;
+
+    @GetMapping("user/operation/{operationId}")
+    OperationDto findById(final JwtAuthenticationToken token, @PathVariable("operationId") Long operationId) {
+        return controllerServiceFacade.findOperationById(token.getName(), operationId);
+    }
+
+    @PutMapping("user/operation/{operationId}")
+    OperationDto update(final JwtAuthenticationToken token,
+                        @PathVariable("operationId") Long operationId,
+                        @RequestBody OperationUpdate operationUpdate) {
+        return controllerServiceFacade.updateOperation(token.getName(), operationId, operationUpdate);
+    }
 
     @PostMapping("user/operation/expense")
     OperationDto expenseCreate(

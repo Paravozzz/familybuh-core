@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ru.homebuh.core.controller.dto.OperationCreate;
+import ru.homebuh.core.controller.dto.OperationUpdate;
 import ru.homebuh.core.domain.*;
 import ru.homebuh.core.domain.enums.OperationTypeEnum;
 import ru.homebuh.core.mapper.OperationMapper;
@@ -15,10 +16,8 @@ import ru.homebuh.core.repository.OperationRepository;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -105,6 +104,51 @@ public class OperationService {
         return operationRepository.save(incomeOperation);
     }
 
+    @Transactional
+    public OperationEntity update(Long operationId, OperationUpdate operationUpdate) {
+        OperationEntity operation = operationRepository.findById(operationId)
+                .orElseThrow(notFoundByIdExceptionSupplier(operationId));
+        OperationTypeEnum operationType = operation.getOperationType();
+        //Amount
+        switch (operationType) {
+            case INCOME:
+                operation.setAmount(new BigDecimal(operationUpdate.getAmount()).abs());
+                break;
+            case EXPENSE:
+                operation.setAmount(new BigDecimal(operationUpdate.getAmount()).abs().negate());
+                break;
+            default:
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "Unsupported operation type. Only updating of Income and Expense operations supported.");
+        }
+        //Account
+        if (!Objects.equals(operation.getAccount().getId(), operationUpdate.getAccountId())) {
+            AccountEntity account = accountService.getAccount(operationUpdate.getAccountId());
+            operation.setAccount(account);
+        }
+        //Category
+        if (!Objects.equals(operation.getCategory().getId(), operationUpdate.getCategoryId())) {
+            CategoryEntity category = categoryService.getCategory(operationUpdate.getCategoryId());
+            if (category.isIncome() && operation.getOperationType() != OperationTypeEnum.INCOME) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "When updating an operation, the category type must match the operation type.");
+            }
+
+            if (!category.isIncome() && operation.getOperationType() != OperationTypeEnum.EXPENSE) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "When updating an operation, the category type must match the operation type.");
+            }
+
+            operation.setCategory(category);
+        }
+        //Date
+        operation.setDate(operationUpdate.getDate());
+        //Description
+        operation.setDescription(operationUpdate.getDescription());
+
+        return  operationRepository.save(operation);
+    }
+
     /**
      * Поиск принадлежащих пользователю операций по заданным параметрам
      *
@@ -154,6 +198,19 @@ public class OperationService {
     }
 
     /**
+     * Найти все операцию пользователя и его семьи
+     *
+     * @param userId      идентификатор пользователя
+     * @param operationId
+     * @return операция пользователя и его семьи
+     */
+    public Optional<OperationEntity> findFamilyOperationById(String userId, Long operationId) {
+        List<UserInfoEntity> familyMembers = userInfoService.findAllFamilyMembers(userId);
+        Set<String> membersIds = familyMembers.stream().map(UserInfoEntity::getId).collect(Collectors.toSet());
+        return operationRepository.findFamilyOperationById(membersIds, operationId);
+    }
+
+    /**
      * Модифицирует предикат для поиска только по счетам и категориям принадлежащим пользователю или его семье
      *
      * @param userId
@@ -171,5 +228,11 @@ public class OperationService {
         Set<Long> userAccountsIds = accountService.findAllFamilyAccountsByUserId(userId).stream().map(AccountEntity::getId).collect(Collectors.toSet());
         booleanBuilder.and(QOperationEntity.operationEntity.account.id.in(userAccountsIds));
         return booleanBuilder;
+    }
+
+    public static Supplier<ResponseStatusException> notFoundByIdExceptionSupplier(Long operationId) {
+        return () -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Operation not found by operationId(" + operationId + ")");
     }
 }

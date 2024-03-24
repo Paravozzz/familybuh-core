@@ -279,7 +279,7 @@ public class DataImportService {
         String description = split[3].trim().replace("\"", "");
         String dateOld = split[2].trim().replace("\"", "").replace(" ", "T");
         OffsetDateTime date = getOffsetDateTime(dateOld);
-        return new OperationCreate(amount, currencyCode, accountId, categoryId, description, date);
+        return new OperationCreate(amount, accountId, categoryId, description, date);
     }
 
     public static List<String> unzip(File source) throws IOException {

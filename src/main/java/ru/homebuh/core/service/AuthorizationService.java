@@ -17,6 +17,7 @@ public class AuthorizationService {
     private final UserInfoService userInfoService;
     private final AccountService accountService;
     private final CategoryService categoryService;
+    private final OperationService operationService;
 
 
     /**
@@ -116,5 +117,14 @@ public class AuthorizationService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 
         category(userInfo.getId(), category.getId());
+    }
+
+    public void operation(String userId, Long operationId) {
+        if (userId == null || operationId == null || userId.isBlank() || operationId < 1)
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+
+        operationService.findFamilyOperationById(userId, operationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+
     }
 }

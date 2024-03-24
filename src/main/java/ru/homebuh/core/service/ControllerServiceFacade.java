@@ -1,5 +1,6 @@
 package ru.homebuh.core.service;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -119,9 +120,27 @@ public class ControllerServiceFacade {
         return operationMapper.mapToDto(income);
     }
 
+    public OperationDto updateOperation(String userId, Long operationId, OperationUpdate operationUpdate) {
+        //проверяем, что обновляемая операция, счёт и категория принадлежат пользователю или семье
+        authorizationService.operation(userId, operationId);
+        authorizationService.account(userId, operationUpdate.getAccountId());
+        authorizationService.category(userId, operationUpdate.getCategoryId());
+        OperationEntity updated = operationService.update(operationId, operationUpdate);
+        return operationMapper.mapToDto(updated);
+    }
+
     public Collection<OperationDto> findOperationsByPredicate(String userId, Predicate predicate) {
         List<OperationEntity> operations = operationService.findByPredicate(userId, predicate);
         return operationMapper.mapToDto(operations);
+    }
+
+    public OperationDto findOperationById(String userId, Long operationId) {
+        BooleanBuilder predicate = new BooleanBuilder();
+        predicate.and(QOperationEntity.operationEntity.id.eq(operationId));
+        OperationEntity operation = operationService.findByPredicate(userId, predicate).stream()
+                .findFirst()
+                .orElseThrow(OperationService.notFoundByIdExceptionSupplier(operationId));
+        return operationMapper.mapToDto(operation);
     }
 
     public Collection<OperationDto> dailyOperations(String userId, OperationTypeEnum operationType, OffsetDateTime date) {
