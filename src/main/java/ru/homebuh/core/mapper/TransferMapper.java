@@ -5,21 +5,22 @@ import org.mapstruct.Mapping;
 import ru.homebuh.core.controller.dto.TransferDto;
 import ru.homebuh.core.domain.TransferEntity;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
-public interface TransferMapper {
+public abstract class TransferMapper {
 
     @Mapping(target = "transferId", source = "id")
-    @Mapping(target = "amount", source = "income.amount")
+    @Mapping(target = "amount", expression = "java(abs(source.getIncome() == null ? null : source.getIncome().getAmount()))")
     @Mapping(target = "currency", source = "expense.account.currency")
     @Mapping(target = "expenseAccountName", source = "expense.account.name")
     @Mapping(target = "incomeAccountName", source = "income.account.name")
-    TransferDto mapToDto(TransferEntity source);
+    public abstract TransferDto mapToDto(TransferEntity source);
 
-    default List<TransferDto> mapToDto(Iterable<TransferEntity> source) {
+    public List<TransferDto> mapToDto(Iterable<TransferEntity> source) {
         if (source == null)
             return Collections.emptyList();
 
@@ -31,6 +32,13 @@ public interface TransferMapper {
         }
 
         return result;
+    }
+
+    protected String abs(BigDecimal source) {
+        if (source == null) {
+            return null;
+        }
+        return source.abs().toString();
     }
 
 }
